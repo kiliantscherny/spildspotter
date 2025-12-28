@@ -1,0 +1,9 @@
+[project]
+name = "salling-food-waste-app"
+version = "0.1.0"
+description = "Food waste data app using Salling Group clearance data"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dlt[workspace]>=1.20.0",
+]
