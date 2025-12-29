@@ -180,4 +180,3 @@ Please select a store from the dropdown above to view its details.
 </Alert>
 
 {/if}
-

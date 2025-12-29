@@ -110,7 +110,7 @@ pipeline = dlt.pipeline(
     destination=dlt.destinations.duckdb(
         "evidence-app/sources/food_waste/salling_food_waste.duckdb"
     ),
-    dataset_name="salling_food_waste",
+    dataset_name="salling_food_waste_pipeline",
     progress="log",
     dev_mode=False,
 )
