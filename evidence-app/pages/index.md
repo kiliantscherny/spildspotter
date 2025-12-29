@@ -30,15 +30,31 @@ The customer flow data shows how busy stores typically are at the current hour, 
 ## Key Statistics
 
 ```sql total_items
-SELECT COUNT(*) as total_clearance_items FROM clearances
+SELECT COUNT(*) as total_clearance_items
+FROM clearances
+WHERE open_status IN ${inputs.open_status_filter.value}
+  AND busyness IN ${inputs.busyness_map_filter.value}
+  AND store_address_city IN ${inputs.city_filter.value}
+  AND store_brand IN ${inputs.brand_filter.value}
 ```
 
 ```sql total_stores
-SELECT COUNT(DISTINCT store_id) as total_stores FROM stores
+SELECT COUNT(DISTINCT store_id) as total_stores
+FROM clearances
+WHERE open_status IN ${inputs.open_status_filter.value}
+  AND busyness IN ${inputs.busyness_map_filter.value}
+  AND store_address_city IN ${inputs.city_filter.value}
+  AND store_brand IN ${inputs.brand_filter.value}
 ```
 
 ```sql total_brands
-SELECT store_brand, COUNT(DISTINCT store_id) as store_count FROM stores GROUP BY store_brand
+SELECT store_brand, COUNT(DISTINCT store_id) as store_count
+FROM clearances
+WHERE open_status IN ${inputs.open_status_filter.value}
+  AND busyness IN ${inputs.busyness_map_filter.value}
+  AND store_address_city IN ${inputs.city_filter.value}
+  AND store_brand IN ${inputs.brand_filter.value}
+GROUP BY store_brand
 ```
 
 ```sql avg_discount
@@ -49,6 +65,10 @@ SELECT
     ROUND(SUM(offer_stock * (offer_original_price - offer_new_price)), 0) as total_savings
 FROM clearances
 WHERE offer_percent_discount IS NOT NULL
+  AND open_status IN ${inputs.open_status_filter.value}
+  AND busyness IN ${inputs.busyness_map_filter.value}
+  AND store_address_city IN ${inputs.city_filter.value}
+  AND store_brand IN ${inputs.brand_filter.value}
 ```
 
 <BigValue
@@ -89,6 +109,14 @@ SELECT DISTINCT open_status FROM clearances ORDER BY open_status
 SELECT DISTINCT busyness FROM clearances ORDER BY busyness
 ```
 
+```sql city_options
+SELECT DISTINCT store_address_city FROM clearances ORDER BY store_address_city
+```
+
+```sql brand_options
+SELECT DISTINCT store_brand FROM clearances ORDER BY store_brand
+```
+
 <Grid cols=2>
 <Dropdown
     name=open_status_filter
@@ -106,6 +134,24 @@ SELECT DISTINCT busyness FROM clearances ORDER BY busyness
     multiple=true
     selectAllByDefault=true
     title="Filter by Busyness"
+/>
+
+<Dropdown
+    name=city_filter
+    data={city_options}
+    value=store_address_city
+    multiple=true
+    selectAllByDefault=true
+    title="Filter by City"
+/>
+
+<Dropdown
+    name=brand_filter
+    data={brand_options}
+    value=store_brand
+    multiple=true
+    selectAllByDefault=true
+    title="Filter by Brand"
 />
 </Grid>
 
@@ -131,6 +177,8 @@ WHERE store_latitude IS NOT NULL
   AND store_longitude != 0
   AND open_status IN ${inputs.open_status_filter.value}
   AND busyness IN ${inputs.busyness_map_filter.value}
+  AND store_address_city IN ${inputs.city_filter.value}
+  AND store_brand IN ${inputs.brand_filter.value}
 GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 ```
 
@@ -215,6 +263,10 @@ WITH parsed_categories AS (
         END as level_3
     FROM clearances
     WHERE product_categories_en IS NOT NULL
+      AND open_status IN ${inputs.open_status_filter.value}
+      AND busyness IN ${inputs.busyness_map_filter.value}
+      AND store_address_city IN ${inputs.city_filter.value}
+      AND store_brand IN ${inputs.brand_filter.value}
 )
 SELECT
     level_1 as source,
@@ -258,6 +310,10 @@ SELECT
     ROUND(AVG(offer_percent_discount), 1) as avg_discount,
     ROUND(SUM(offer_stock), 0) as total_stock
 FROM clearances
+WHERE open_status IN ${inputs.open_status_filter.value}
+  AND busyness IN ${inputs.busyness_map_filter.value}
+  AND store_address_city IN ${inputs.city_filter.value}
+  AND store_brand IN ${inputs.brand_filter.value}
 GROUP BY store_brand
 ORDER BY item_count DESC
 ```
@@ -285,6 +341,10 @@ SELECT
     COUNT(*) as item_count
 FROM clearances
 WHERE offer_percent_discount IS NOT NULL
+  AND open_status IN ${inputs.open_status_filter.value}
+  AND busyness IN ${inputs.busyness_map_filter.value}
+  AND store_address_city IN ${inputs.city_filter.value}
+  AND store_brand IN ${inputs.brand_filter.value}
 GROUP BY 1, 2
 ORDER BY sort_order
 ```
