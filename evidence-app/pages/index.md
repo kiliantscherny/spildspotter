@@ -6,7 +6,7 @@ full_width: true
 <LastRefreshed/>
 
 <div style="display:flex;gap:1rem;margin-bottom:1rem;">
-    <a href="/" style="padding:0.5rem 1rem;background:#22c55e;color:white;text-decoration:none;border-radius:0.25rem;font-weight:500;">Overview</a>
+    <a href="/" style="padding:0.5rem 1rem;background:#8b5cf6;color:white;text-decoration:none;border-radius:0.25rem;font-weight:500;">Overview</a>
     <a href="/store" style="padding:0.5rem 1rem;background:#6b7280;color:white;text-decoration:none;border-radius:0.25rem;font-weight:500;">Store Details</a>
 </div>
 
@@ -134,6 +134,9 @@ WHERE store_latitude IS NOT NULL
 GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 ```
 
+<Tabs>
+<Tab label="Busyness Heatmap">
+
 <BubbleMap
 data={store_locations}
 lat=store_latitude
@@ -142,14 +145,14 @@ pointName=store_name
 size=clearance_count
 value=customer_flow_pct
 height=500
-colorPalette={['#22c55e', '#84cc16', '#facc15', '#f97316', '#ef4444']}
-tooltipType=click
+colorPalette={['#10b981', '#22c55e', '#06b6d4', '#8b5cf6', '#ef4444']}
+tooltipType=hover
 tooltip={[
 {id: 'store_name', showColumnName: false, valueClass: 'text-xl font-semibold'},
-{id: 'store_brand', showColumnName: false, valueClass: 'text-l'},
 {id: 'store_address_street', showColumnName: false},
 {id: 'store_address_zip', showColumnName: false},
 {id: 'store_address_city', showColumnName: false},
+{id: 'store_brand', title: 'Brand', showColumnName: true, valueClass: 'font-bold'},
 {id: 'open_status', title: 'Status', showColumnName: true, valueClass: 'font-bold'},
 {id: 'busyness', title: 'Busyness Now', showColumnName: true, valueClass: 'font-bold'},
 {id: 'customer_flow_pct', title: 'Crowd Level', showColumnName: true, fmt: '#0.00"%"'},
@@ -159,6 +162,38 @@ tooltip={[
 ]}
 legend=true
 />
+
+</Tab>
+<Tab label="Stores by Brand">
+
+<BubbleMap
+data={store_locations}
+lat=store_latitude
+long=store_longitude
+pointName=store_name
+size=clearance_count
+value=store_brand
+height=500
+colorPalette={['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b']}
+tooltipType=hover
+tooltip={[
+{id: 'store_name', showColumnName: false, valueClass: 'text-xl font-semibold'},
+{id: 'store_address_street', showColumnName: false},
+{id: 'store_address_zip', showColumnName: false},
+{id: 'store_address_city', showColumnName: false},
+{id: 'store_brand', title: 'Brand', showColumnName: true, valueClass: 'font-bold'},
+{id: 'open_status', title: 'Status', showColumnName: true, valueClass: 'font-bold'},
+{id: 'busyness', title: 'Busyness Now', showColumnName: true, valueClass: 'font-bold'},
+{id: 'customer_flow_pct', title: 'Crowd Level', showColumnName: true, fmt: '#0.00"%"'},
+{id: 'hours_today', title: 'Today', showColumnName: true},
+{id: 'hours_tomorrow', title: 'Tomorrow', showColumnName: true},
+{id: 'clearance_count', title: 'Clearance Items', showColumnName: true, valueClass: 'font-bold'}
+]}
+legend=true
+/>
+
+</Tab>
+</Tabs>
 
 ## Category Flow
 
@@ -260,7 +295,7 @@ data={items_by_brand}
 x=store_brand
 y=item_count
 title="Clearance Items by Store Brand"
-colorPalette={['#22c55e', '#f97316']}
+colorPalette={['#8b5cf6', '#06b6d4']}
 swapXY=true
 />
 
@@ -270,5 +305,5 @@ x=discount_range
 y=item_count
 title="Discount Distribution"
 sort=false
-colorPalette={['#22c55e', '#f97316']}/>
+colorPalette={['#8b5cf6', '#06b6d4']}/>
 </Grid>

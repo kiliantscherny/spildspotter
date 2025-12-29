@@ -7,7 +7,7 @@ full_width: true
 
 <div style="display:flex;gap:1rem;margin-bottom:1rem;">
     <a href="/" style="padding:0.5rem 1rem;background:#6b7280;color:white;text-decoration:none;border-radius:0.25rem;font-weight:500;">Overview</a>
-    <a href="/store" style="padding:0.5rem 1rem;background:#22c55e;color:white;text-decoration:none;border-radius:0.25rem;font-weight:500;">Store Details</a>
+    <a href="/store" style="padding:0.5rem 1rem;background:#8b5cf6;color:white;text-decoration:none;border-radius:0.25rem;font-weight:500;">Store Details</a>
 </div>
 
 # Store Details
@@ -101,7 +101,7 @@ WHERE store_name = '${inputs.store_filter.value}'
 LIMIT 1
 ```
 
-<AreaChart data={filtered_hourly} x=hour_label y=busyness_pct yAxisTitle="Busyness %" xAxisTitle="Hour of Day" title="Typical Busyness Pattern for {inputs.store_filter.value}" fillColor=#22c55e fillOpacity=0.3 line=true sort=false yMax=100 yFmt='#0.00"%"'>
+<AreaChart data={filtered_hourly} x=hour_label y=busyness_pct yAxisTitle="Busyness %" xAxisTitle="Hour of Day" title="Typical Busyness Pattern for {inputs.store_filter.value}" fillColor=#8b5cf6 fillOpacity=0.3 line=true sort=false yMax=100 yFmt='#0.00"%"'>
     {#if current_hour_now.length > 0}
     <ReferenceLine x={current_hour_now[0].hour_label} label="Current Hour" labelPosition=aboveEnd color=#ef4444 lineWidth=3 lineType=dotted hideValue=true />
     {/if}
@@ -165,12 +165,12 @@ ORDER BY category_level_1, category_level_2, category_level_3, offer_end_time AS
     <Column id=category_level_4 title="Subcategory Level 4" wrap=true colGroup=Category />
     <Column id=product_image_local contentType=image height=60px align=center title="Image" totalAgg='' colGroup=Product />
     <Column id=product_description title="Product" wrap=true totalAgg=countDistinct subtotalFmt='[=1]0 "item type";0 "item types"' colGroup=Product />
-    <Column id=stock title="Stock" fmt="num0" contentType=colorscale scaleColor={['#ef4444', '#fbbf24', '#22c55e']} totalAgg=sum subtotalFmt='Total: #.##0' colGroup=Product />
+    <Column id=stock title="Stock" fmt="num0" contentType=colorscale scaleColor={['#ef4444', '#fbbf24', '#10b981']} totalAgg=sum subtotalFmt='Total: #.##0' colGroup=Product />
     <Column id=offer_new_price title="Price" fmt='#.##0,00 "kr."' totalAgg=mean subtotalFmt='Gns.: #.##0,00 "kr."' contentType=colorscale colorScale=positive colGroup=Price />
     <Column id=offer_original_price title="Was" fmt='#.##0,00 "kr."' totalAgg=mean subtotalFmt='Gns.: #.##0,00 "kr."' colGroup=Price />
     <Column id=discount_pct title="Discount" fmt='#0.00"%"' contentType=colorscale colorScale=positive totalAgg=mean subtotalFmt='Gns.: #0.00"%"' colGroup=Price />
     <Column id=expires title="Offer Ends At" fmt='%Y-%m-%d %H:%M' totalAgg='' colGroup=Time />
-    <Column id=hours_to_expiry title="Hours Left" fmt='#0"h"' contentType=colorscale scaleColor={['#ef4444', '#fbbf24', '#22c55e']} colorMin=0 colorMax=48 totalAgg='' colGroup=Time />
+    <Column id=hours_to_expiry title="Hours Left" fmt='#0"h"' contentType=colorscale scaleColor={['#ef4444', '#fbbf24', '#10b981']} colorMin=0 colorMax=48 totalAgg='' colGroup=Time />
 </DataTable>
 
 {:else}

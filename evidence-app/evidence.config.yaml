@@ -2,46 +2,46 @@ appearance:
   default: dark
   switcher: true
 
-# Bold & Modern Food Theme
+# Modern Dark Mode - Blue, Purple, Green Palette
 theme:
   colorPalettes:
     default:
-      - "#22c55e"  # Bright Green
-      - "#16a34a"  # Green
-      - "#f97316"  # Orange
-      - "#fb923c"  # Light Orange
-      - "#ef4444"  # Red (for urgency)
-      - "#3b82f6"  # Blue
-      - "#8b5cf6"  # Purple
-      - "#ec4899"  # Pink
-      - "#14b8a6"  # Teal
-      - "#84cc16"  # Lime
+      - "#8b5cf6" # Purple (primary)
+      - "#6366f1" # Indigo
+      - "#3b82f6" # Blue
+      - "#06b6d4" # Cyan
+      - "#10b981" # Emerald
+      - "#14b8a6" # Teal
+      - "#22c55e" # Green
+      - "#84cc16" # Lime
+      - "#f59e0b" # Amber
+      - "#ef4444" # Red
   colorScales:
     default:
       light:
-        - "#dcfce7"
-        - "#166534"
+        - "#ede9fe"
+        - "#581c87"
       dark:
-        - "#166534"
-        - "#4ade80"
+        - "#581c87"
+        - "#c084fc"
   colors:
     primary:
-      light: "#16a34a"
-      dark: "#22c55e"
+      light: "#7c3aed"
+      dark: "#a78bfa"
     accent:
-      light: "#f97316"
-      dark: "#fb923c"
+      light: "#0891b2"
+      dark: "#22d3ee"
     base:
       light: "#fafaf9"
-      dark: "#0c0a09"
+      dark: "#0f172a"
     info:
-      light: "#0ea5e9"
-      dark: "#38bdf8"
+      light: "#2563eb"
+      dark: "#60a5fa"
     positive:
-      light: "#16a34a"
-      dark: "#4ade80"
+      light: "#059669"
+      dark: "#34d399"
     warning:
-      light: "#f59e0b"
+      light: "#d97706"
       dark: "#fbbf24"
     negative:
       light: "#dc2626"
@@ -52,4 +52,4 @@ plugins:
     "@evidence-dev/core-components": {}
 
   datasources:
-    "@evidence-dev/duckdb": { }
+    "@evidence-dev/duckdb": {}
