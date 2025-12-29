@@ -30,3 +30,5 @@ flagged/
 # Environment
 .env
 .env.local
+
+evidence-app/static/product-images/

@@ -31,7 +31,7 @@ def salling_food_waste_source(
     @dlt.resource(
         name="food_waste_stores",
         primary_key="store__id",
-        write_disposition="merge",
+        write_disposition="replace",
     )
     def food_waste_stores_resource():
         """Fetch food waste data from stores across multiple zip codes."""
@@ -107,9 +107,12 @@ def salling_food_waste_source(
 
 pipeline = dlt.pipeline(
     pipeline_name="salling_food_waste_pipeline",
-    destination="duckdb",
+    destination=dlt.destinations.duckdb(
+        "evidence-app/sources/food_waste/salling_food_waste.duckdb"
+    ),
+    dataset_name="salling_food_waste",
     progress="log",
-    dev_mode=True,
+    dev_mode=False,
 )
 
 

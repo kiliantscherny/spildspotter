@@ -1,0 +1,4 @@
+name: food_waste
+type: duckdb
+options:
+  filename: salling_food_waste.duckdb

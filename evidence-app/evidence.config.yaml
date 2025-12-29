@@ -1,0 +1,55 @@
+appearance:
+  default: dark
+  switcher: true
+
+# Bold & Modern Food Theme
+theme:
+  colorPalettes:
+    default:
+      - "#22c55e"  # Bright Green
+      - "#16a34a"  # Green
+      - "#f97316"  # Orange
+      - "#fb923c"  # Light Orange
+      - "#ef4444"  # Red (for urgency)
+      - "#3b82f6"  # Blue
+      - "#8b5cf6"  # Purple
+      - "#ec4899"  # Pink
+      - "#14b8a6"  # Teal
+      - "#84cc16"  # Lime
+  colorScales:
+    default:
+      light:
+        - "#dcfce7"
+        - "#166534"
+      dark:
+        - "#166534"
+        - "#4ade80"
+  colors:
+    primary:
+      light: "#16a34a"
+      dark: "#22c55e"
+    accent:
+      light: "#f97316"
+      dark: "#fb923c"
+    base:
+      light: "#fafaf9"
+      dark: "#0c0a09"
+    info:
+      light: "#0ea5e9"
+      dark: "#38bdf8"
+    positive:
+      light: "#16a34a"
+      dark: "#4ade80"
+    warning:
+      light: "#f59e0b"
+      dark: "#fbbf24"
+    negative:
+      light: "#dc2626"
+      dark: "#f87171"
+
+plugins:
+  components:
+    "@evidence-dev/core-components": {}
+
+  datasources:
+    "@evidence-dev/duckdb": { }
