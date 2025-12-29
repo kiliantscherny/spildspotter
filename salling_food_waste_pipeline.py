@@ -13,6 +13,70 @@ import requests
 
 
 @dlt.source
+def salling_stores_source():
+    """
+    Define dlt resources from Salling Group Stores API.
+
+    First fetches all stores to get comprehensive store data and zip codes.
+    """
+    access_token = dlt.secrets["salling_food_waste_source.access_token"]
+
+    @dlt.resource(
+        name="all_stores",
+        primary_key="id",
+        write_disposition="replace",
+    )
+    def all_stores_resource():
+        """Fetch all stores from the Stores API."""
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+        }
+        base_url = "https://api.sallinggroup.com/v2/stores"
+
+        print("Fetching all stores...")  # noqa: T201
+
+        # Retry with exponential backoff for rate limiting
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(
+                    base_url,
+                    headers=headers,
+                    params={"per_page": 1000, "country": "DK"},
+                    timeout=30,
+                )
+                if response.status_code == 429:
+                    wait_time = (2**attempt) * 2
+                    print(f"Rate limited, waiting {wait_time}s...")  # noqa: T201
+                    time.sleep(wait_time)
+                    continue
+                response.raise_for_status()
+                break
+            except requests.exceptions.RequestException as e:
+                print(f"Request error: {e}")  # noqa: T201
+                if attempt < max_retries - 1:
+                    time.sleep(2**attempt)
+                    continue
+                raise
+
+        stores = response.json()
+        print(f"Found {len(stores)} stores")  # noqa: T201
+
+        for store_data in stores:
+            # Transform coordinates array [lon, lat] into separate fields
+            coords = store_data.get("coordinates", [])
+            if coords and len(coords) >= 2:
+                store_data["longitude"] = coords[0]
+                store_data["latitude"] = coords[1]
+            # Remove the original array to avoid nested table issues
+            store_data.pop("coordinates", None)
+
+            yield store_data
+
+    return all_stores_resource
+
+
+@dlt.source
 def salling_food_waste_source(
     zip_codes: list[str] | None = None,
 ):
@@ -21,11 +85,8 @@ def salling_food_waste_source(
 
     Args:
         zip_codes: List of Danish zip codes to search for stores with food waste items.
-                   Default is ["8000"] (Aarhus). Examples: ["2100", "5000", "8000"].
+                   If None, zip codes will be extracted from the all_stores table.
     """
-    if zip_codes is None:
-        zip_codes = ["8000"]
-
     access_token = dlt.secrets["salling_food_waste_source.access_token"]
 
     @dlt.resource(
@@ -40,6 +101,8 @@ def salling_food_waste_source(
         }
         base_url = "https://api.sallinggroup.com/v1/food-waste/"
         seen_store_ids = set()
+
+        print(f"Fetching clearance data for {len(zip_codes)} zip codes...")  # noqa: T201
 
         for i, zip_code in enumerate(zip_codes):
             # Rate limiting: wait between requests (except for the first one)
@@ -102,6 +165,8 @@ def salling_food_waste_source(
 
                     yield store_data
 
+        print(f"Fetched clearance data from {len(seen_store_ids)} unique stores")  # noqa: T201
+
     return food_waste_stores_resource
 
 
@@ -116,28 +181,42 @@ pipeline = dlt.pipeline(
 )
 
 
-# List of Danish zip codes to fetch food waste data from
-ZIP_CODES = [
-    "1000",  # Copenhagen K
-    "2100",  # Copenhagen Ø
-    "2200",  # Copenhagen N
-    "2300",  # Copenhagen S
-    "2400",  # Copenhagen NV
-    "2500",  # Valby
-    "2600",  # Glostrup
-    "2700",  # Brønshøj
-    "2800",  # Kongens Lyngby
-    "2900",  # Hellerup
-    "3000",  # Helsingør
-    "4000",  # Roskilde
-    "5000",  # Odense C
-    "6000",  # Kolding
-    "7000",  # Fredericia
-    "8000",  # Aarhus C
-    "9000",  # Aalborg
-]
-
-
 if __name__ == "__main__":
-    load_info = pipeline.run(salling_food_waste_source(zip_codes=ZIP_CODES))
+    import duckdb
+
+    # Step 1: Fetch all stores
+    print("\n" + "=" * 60)  # noqa: T201
+    print("STEP 1: Fetching all stores from Stores API")  # noqa: T201
+    print("=" * 60 + "\n")  # noqa: T201
+
+    load_info = pipeline.run(salling_stores_source())
     print(load_info)  # noqa: T201
+
+    # Step 2: Extract unique zip codes from the all_stores table
+    print("\n" + "=" * 60)  # noqa: T201
+    print("STEP 2: Extracting unique zip codes from stores")  # noqa: T201
+    print("=" * 60 + "\n")  # noqa: T201
+
+    conn = duckdb.connect("evidence-app/sources/food_waste/salling_food_waste.duckdb")
+    zip_codes_result = conn.execute("""
+        SELECT DISTINCT address__zip
+        FROM salling_food_waste_pipeline.all_stores
+        WHERE address__zip IS NOT NULL
+        ORDER BY address__zip
+    """).fetchall()
+    conn.close()
+
+    zip_codes = [row[0] for row in zip_codes_result]
+    print(f"Found {len(zip_codes)} unique zip codes")  # noqa: T201
+
+    # Step 3: Fetch clearance data for all zip codes
+    print("\n" + "=" * 60)  # noqa: T201
+    print("STEP 3: Fetching clearance data from Food Waste API")  # noqa: T201
+    print("=" * 60 + "\n")  # noqa: T201
+
+    load_info = pipeline.run(salling_food_waste_source(zip_codes=zip_codes))
+    print(load_info)  # noqa: T201
+
+    print("\n" + "=" * 60)  # noqa: T201
+    print("Pipeline completed successfully!")  # noqa: T201
+    print("=" * 60 + "\n")  # noqa: T201
