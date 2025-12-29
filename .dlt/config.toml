@@ -1,2 +1,24 @@
-[runtime]
-log_level = "WARNING"
+# dlt Performance Configuration
+# Based on https://dlthub.com/docs/reference/performance
+
+[extract]
+# Increase buffer size for better performance (default: 5000)
+buffer_max_items = 10000
+
+# Enable file rotation for parallel processing
+file_max_items = 100000
+file_max_bytes = 10485760  # 10 MB
+
+# Number of parallel workers for resource extraction (default: 5)
+workers = 10
+
+# Max items in parallel queue (default: 20)
+max_parallel_items = 50
+
+[normalize]
+# Number of workers for normalize stage (default: 1 for serial processing)
+workers = 4
+
+[load]
+# Number of workers for load stage (default: 20)
+workers = 20

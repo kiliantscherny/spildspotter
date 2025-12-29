@@ -6,19 +6,12 @@ from Danish stores (Føtex, Netto, Basalt, Bilka) via the Salling Group API.
 API Documentation: https://developer.sallinggroup.com/api-reference
 """
 
-import time
-
 import dlt
-import requests
 
 
 @dlt.source
 def salling_stores_source():
-    """
-    Define dlt resources from Salling Group Stores API.
-
-    First fetches all stores to get comprehensive store data and zip codes.
-    """
+    """Fetch all stores from Salling Group Stores API."""
     access_token = dlt.secrets["salling_food_waste_source.access_token"]
 
     @dlt.resource(
@@ -27,66 +20,62 @@ def salling_stores_source():
         write_disposition="replace",
     )
     def all_stores_resource():
-        """Fetch all stores from the Stores API."""
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-        }
-        base_url = "https://api.sallinggroup.com/v2/stores"
+        """Fetch all stores using RESTClient with automatic retry logic."""
+        import requests
 
         print("Fetching all stores...")  # noqa: T201
 
-        # Retry with exponential backoff for rate limiting
+        # Use requests with retry logic (simpler than RESTClient for this case)
         max_retries = 5
         for attempt in range(max_retries):
             try:
                 response = requests.get(
-                    base_url,
-                    headers=headers,
+                    "https://api.sallinggroup.com/v2/stores",
+                    headers={"Authorization": f"Bearer {access_token}"},
                     params={"per_page": 1000, "country": "DK"},
                     timeout=30,
                 )
                 if response.status_code == 429:
                     wait_time = (2**attempt) * 2
                     print(f"Rate limited, waiting {wait_time}s...")  # noqa: T201
+                    import time
+
                     time.sleep(wait_time)
                     continue
                 response.raise_for_status()
+                stores = response.json()
                 break
             except requests.exceptions.RequestException as e:
                 print(f"Request error: {e}")  # noqa: T201
                 if attempt < max_retries - 1:
+                    import time
+
                     time.sleep(2**attempt)
                     continue
                 raise
 
-        stores = response.json()
         print(f"Found {len(stores)} stores")  # noqa: T201
 
+        # Process all stores, then yield as batch
+        processed_stores = []
         for store_data in stores:
             # Transform coordinates array [lon, lat] into separate fields
             coords = store_data.get("coordinates", [])
             if coords and len(coords) >= 2:
                 store_data["longitude"] = coords[0]
                 store_data["latitude"] = coords[1]
-            # Remove the original array to avoid nested table issues
             store_data.pop("coordinates", None)
+            processed_stores.append(store_data)
 
-            yield store_data
+        # Yield entire batch at once (much faster than individual yields)
+        yield processed_stores
 
     return all_stores_resource
 
 
 @dlt.source
-def salling_food_waste_source(
-    zip_codes: list[str] | None = None,
-):
-    """
-    Define dlt resources from Salling Group Food Waste API endpoints.
-
-    Args:
-        zip_codes: List of Danish zip codes to search for stores with food waste items.
-                   If None, zip codes will be extracted from the all_stores table.
-    """
+def salling_food_waste_source(zip_codes: list[str]):
+    """Fetch clearance data for multiple zip codes."""
     access_token = dlt.secrets["salling_food_waste_source.access_token"]
 
     @dlt.resource(
@@ -95,45 +84,65 @@ def salling_food_waste_source(
         write_disposition="replace",
     )
     def food_waste_stores_resource():
-        """Fetch food waste data from stores across multiple zip codes."""
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-        }
-        base_url = "https://api.sallinggroup.com/v1/food-waste/"
+        """Fetch clearance data from stores across multiple zip codes."""
+        import time
+
+        import requests
+
         seen_store_ids = set()
+        all_stores = []
 
         print(f"Fetching clearance data for {len(zip_codes)} zip codes...")  # noqa: T201
+        print(
+            f"Estimated time: ~{len(zip_codes) * 2 / 60:.1f} minutes (2s delay per zip code)"
+        )  # noqa: T201
+        print()  # noqa: T201
 
-        for i, zip_code in enumerate(zip_codes):
+        # Fetch all zip codes and collect results
+        for i, zip_code in enumerate(zip_codes, start=1):
+            print(
+                f"[{i}/{len(zip_codes)}] Processing zip code {zip_code}...\n",
+                end=" ",
+                flush=True,
+            )  # noqa: T201
+
             # Rate limiting: wait between requests (except for the first one)
-            if i > 0:
-                time.sleep(2.0)
+            if i > 1:
+                time.sleep(2)  # Conservative delay to avoid spike protection quarantine
 
-            # Retry with exponential backoff for rate limiting
             max_retries = 5
             success = False
+
             for attempt in range(max_retries):
                 try:
                     response = requests.get(
-                        base_url,
-                        headers=headers,
+                        "https://api.sallinggroup.com/v1/food-waste/",
+                        headers={"Authorization": f"Bearer {access_token}"},
                         params={"zip": zip_code},
                         timeout=30,
                     )
                     if response.status_code == 429:
-                        wait_time = (2**attempt) * 2  # 2, 4, 8, 16, 32 seconds
-                        print(
-                            f"Rate limited on zip {zip_code}, waiting {wait_time}s..."
-                        )  # noqa: T201
+                        # Read Retry-After header - API tells us how long to wait
+                        retry_after = response.headers.get("Retry-After")
+                        if retry_after:
+                            wait_time = int(retry_after)
+                            print(
+                                f"Rate limited on zip {zip_code}, API says wait {wait_time}s (Retry-After: {retry_after})"
+                            )  # noqa: T201
+                        else:
+                            wait_time = (2**attempt) * 2
+                            print(
+                                f"Rate limited on zip {zip_code}, waiting {wait_time}s (no Retry-After header)"
+                            )  # noqa: T201
                         time.sleep(wait_time)
                         continue
                     if response.status_code >= 500:
-                        # Server error - skip this zip code
                         print(
                             f"Server error {response.status_code} for zip {zip_code}, skipping..."
                         )  # noqa: T201
                         break
                     response.raise_for_status()
+                    stores = response.json()
                     success = True
                     break
                 except requests.exceptions.RequestException as e:
@@ -144,28 +153,45 @@ def salling_food_waste_source(
                     break
 
             if not success:
+                print("FAILED")  # noqa: T201
                 continue
 
-            stores = response.json()
+            if not stores:
+                print("No stores")  # noqa: T201
+                continue
 
+            # Process stores from this zip code
+            stores_added = 0
             for store_data in stores:
                 store_id = store_data["store"]["id"]
-                # Deduplicate stores that appear in multiple zip code results
-                if store_id not in seen_store_ids:
-                    seen_store_ids.add(store_id)
-                    store_data["queried_zip_code"] = zip_code
 
-                    # Transform coordinates array [lon, lat] into separate fields
-                    coords = store_data["store"].get("coordinates", [])
-                    if coords and len(coords) >= 2:
-                        store_data["store"]["longitude"] = coords[0]
-                        store_data["store"]["latitude"] = coords[1]
-                    # Remove the original array to avoid the nested table
-                    store_data["store"].pop("coordinates", None)
+                # Deduplicate
+                if store_id in seen_store_ids:
+                    continue
 
-                    yield store_data
+                seen_store_ids.add(store_id)
+                store_data["queried_zip_code"] = zip_code
+
+                # Transform coordinates
+                coords = store_data["store"].get("coordinates", [])
+                if coords and len(coords) >= 2:
+                    store_data["store"]["longitude"] = coords[0]
+                    store_data["store"]["latitude"] = coords[1]
+                store_data["store"].pop("coordinates", None)
+
+                all_stores.append(store_data)
+                stores_added += 1
+
+            # Print success message with store count
+            print(
+                f"OK - {stores_added} new stores (total unique: {len(seen_store_ids)})"
+            )  # noqa: T201
 
         print(f"Fetched clearance data from {len(seen_store_ids)} unique stores")  # noqa: T201
+
+        # Yield all stores as a single batch for maximum performance
+        if all_stores:
+            yield all_stores
 
     return food_waste_stores_resource
 
