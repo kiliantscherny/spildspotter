@@ -12,7 +12,7 @@ full_width: true
 
 # Store Details
 
-Select a store to view its clearance items, busyness patterns, and other details.
+Select a store to view its current clearance inventory, typical busyness patterns throughout the day, and detailed product information.
 
 ```sql store_list
 SELECT DISTINCT
@@ -28,6 +28,7 @@ ORDER BY store_brand, store_name
     value=store_name
     label=store_label
     title="Select a Store"
+    defaultValue="føtex Fisketorvet, København"
 />
 
 {#if inputs.store_filter.value}
@@ -78,7 +79,9 @@ LIMIT 1
 
 ## Store Busyness Throughout the Day
 
-The chart below shows the typical busyness pattern for **{inputs.store_filter.value}** throughout the day. The vertical line shows the current hour.
+The chart below shows the typical customer flow pattern for **{inputs.store_filter.value}** throughout the day. The red dotted line indicates the current hour. Use this information to plan your visit during quieter periods, making it easier to browse clearance items without crowds.
+
+**Note:** Busyness data represents typical patterns based on historical customer flow and may not reflect unusual circumstances or special events.
 
 ```sql filtered_hourly
 SELECT
@@ -108,6 +111,14 @@ LIMIT 1
 </AreaChart>
 
 ## Clearance Items
+
+Browse all current clearance items at this store, organized by product category. The table shows pricing, discounts, available stock, and when each offer expires. Items are color-coded to help you quickly identify the best deals and most urgent offers.
+
+**Understanding the data:**
+
+- **Stock:** Available quantity (note: not real-time, treat as an indicator)
+- **Hours Left:** Time remaining until the offer expires
+- **Discount %:** Percentage reduction from original price
 
 ```sql all_clearances
 SELECT

@@ -5,6 +5,8 @@ full_width: true
 
 <LastRefreshed/>
 
+Explore an overview or view details for a specific store.
+
 <div style="display:flex;gap:1rem;margin-bottom:1rem;">
     <a href="/" style="padding:0.5rem 1rem;background:#8b5cf6;color:white;text-decoration:none;border-radius:0.25rem;font-weight:500;">Overview</a>
     <a href="/store" style="padding:0.5rem 1rem;background:#6b7280;color:white;text-decoration:none;border-radius:0.25rem;font-weight:500;">Store Details</a>
@@ -14,46 +16,61 @@ full_width: true
 
 **Reducing food waste from Danish supermarkets - Salling Group (Netto & Foetex)**
 
-<Accordion>
-<AccordionItem title="About this dashboard">
+<Accordion class="text-white py-2 px-6 rounded-md bg-violet-950">
+<AccordionItem title="About this app">
 
-This dashboard displays real-time clearance data from Salling Group stores (Netto and Foetex) across Denmark. These are food items approaching their expiration date that are being sold at reduced prices to minimize food waste.
+<Alert status="negative">
+This app is <strong>not affiliated with Salling Group A/S</strong>. It is a personal project by <strong><a href="https://www.linkedin.com/in/kiliantscherny/" target="_blank">Kilian Tscherny</a></strong>.
+</Alert>
 
-**Data Source:** [Salling Group Food Waste API](https://developer.sallinggroup.com/api-reference)  
-**Stores Covered:** Netto & Foetex locations throughout Denmark
+<Alert status="warning">
+This app is a work in progress and the data may not be completely accurate.
+</Alert>
+
+This app provides an interactive way to explore clearance item data from Salling Group stores (Bilka, Netto and Føtex) across Denmark. These are food items approaching their expiration date that are being sold at reduced prices to minimize food waste.
+
+Data is refreshed daily and includes all of the available product data from the time of the last update.
 
 The customer flow data shows how busy stores typically are at the current hour, helping you avoid crowds when shopping for clearance items.
+
+</AccordionItem>
+
+<AccordionItem title="About the Food Waste API">
+
+The [Salling Group Food Waste API](https://developer.sallinggroup.com/api-reference#apis-food-waste) provides access to over **thousands of discounted items daily** across Føtex, Netto, and Bilka stores throughout Denmark. This API enables customers to find heavily discounted products nearing their expiration dates, helping to reduce food waste while saving money.
+
+**How it works:**
+
+- Clearance items are marked down with a discount percentage and a new price
+- The data also includes the number of items in stock in each store at the time of the last update.
+- Store information includes addresses, coordinates, and opening hours
 
 </AccordionItem>
 </Accordion>
 
 ## Key Statistics
 
+The statistics below reflect current clearance offers across all selected stores. Values update as you adjust the filters above.
+
 ```sql total_items
 SELECT COUNT(*) as total_clearance_items
 FROM clearances
-WHERE open_status IN ${inputs.open_status_filter.value}
-  AND busyness IN ${inputs.busyness_map_filter.value}
-  AND store_address_city IN ${inputs.city_filter.value}
-  AND store_brand IN ${inputs.brand_filter.value}
+WHERE store_address_city IN ${inputs.city_filter.value}
+  AND ${inputs.dimension_filter}
 ```
 
 ```sql total_stores
 SELECT COUNT(DISTINCT store_id) as total_stores
 FROM clearances
-WHERE open_status IN ${inputs.open_status_filter.value}
-  AND busyness IN ${inputs.busyness_map_filter.value}
-  AND store_address_city IN ${inputs.city_filter.value}
-  AND store_brand IN ${inputs.brand_filter.value}
+WHERE store_address_city IN ${inputs.city_filter.value}
+  AND ${inputs.dimension_filter}
 ```
 
 ```sql total_brands
 SELECT store_brand, COUNT(DISTINCT store_id) as store_count
 FROM clearances
-WHERE open_status IN ${inputs.open_status_filter.value}
-  AND busyness IN ${inputs.busyness_map_filter.value}
-  AND store_address_city IN ${inputs.city_filter.value}
-  AND store_brand IN ${inputs.brand_filter.value}
+WHERE store_address_city IN ${inputs.city_filter.value}
+  AND ${inputs.dimension_filter}
 GROUP BY store_brand
 ```
 
@@ -65,10 +82,8 @@ SELECT
     ROUND(SUM(offer_stock * (offer_original_price - offer_new_price)), 0) as total_savings
 FROM clearances
 WHERE offer_percent_discount IS NOT NULL
-  AND open_status IN ${inputs.open_status_filter.value}
-  AND busyness IN ${inputs.busyness_map_filter.value}
   AND store_address_city IN ${inputs.city_filter.value}
-  AND store_brand IN ${inputs.brand_filter.value}
+  AND ${inputs.dimension_filter}
 ```
 
 <BigValue
@@ -101,40 +116,13 @@ WHERE offer_percent_discount IS NOT NULL
 
 ## Store Locations Map
 
-```sql open_status_options
-SELECT DISTINCT open_status FROM clearances ORDER BY open_status
-```
+Use the map below to visualize stores with clearance items. The **Busyness Heatmap** shows how crowded each store typically is at the current hour, while the **Stores by Brand** view distinguishes between the different brands' locations. Bubble size indicates the number of clearance items available at each store.
 
-```sql busyness_map_options
-SELECT DISTINCT busyness FROM clearances ORDER BY busyness
-```
+**Filters:** Use the dimension grid and city dropdown below to refine your view. All filters apply to the entire page, including statistics, maps, and charts.
 
 ```sql city_options
 SELECT DISTINCT store_address_city FROM clearances ORDER BY store_address_city
 ```
-
-```sql brand_options
-SELECT DISTINCT store_brand FROM clearances ORDER BY store_brand
-```
-
-<Grid cols=2>
-<Dropdown
-    name=open_status_filter
-    data={open_status_options}
-    value=open_status
-    multiple=true
-    selectAllByDefault=true
-    title="Filter by Store Status"
-/>
-
-<Dropdown
-    name=busyness_map_filter
-    data={busyness_map_options}
-    value=busyness
-    multiple=true
-    selectAllByDefault=true
-    title="Filter by Busyness"
-/>
 
 <Dropdown
     name=city_filter
@@ -145,15 +133,24 @@ SELECT DISTINCT store_brand FROM clearances ORDER BY store_brand
     title="Filter by City"
 />
 
-<Dropdown
-    name=brand_filter
-    data={brand_options}
-    value=store_brand
-    multiple=true
-    selectAllByDefault=true
-    title="Filter by Brand"
+```sql filter_dimensions
+SELECT
+    open_status,
+    busyness,
+    store_brand,
+    COUNT(*) as item_count
+FROM clearances
+WHERE store_address_city IN ${inputs.city_filter.value}
+GROUP BY open_status, busyness, store_brand
+```
+
+<DimensionGrid
+    data={filter_dimensions}
+    name=dimension_filter
+    metric='sum(item_count)'
+    metricLabel="Items"
+    multiple
 />
-</Grid>
 
 ```sql store_locations
 SELECT
@@ -175,10 +172,8 @@ WHERE store_latitude IS NOT NULL
   AND store_longitude IS NOT NULL
   AND store_latitude != 0
   AND store_longitude != 0
-  AND open_status IN ${inputs.open_status_filter.value}
-  AND busyness IN ${inputs.busyness_map_filter.value}
   AND store_address_city IN ${inputs.city_filter.value}
-  AND store_brand IN ${inputs.brand_filter.value}
+  AND ${inputs.dimension_filter}
 GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 ```
 
@@ -245,7 +240,7 @@ legend=true
 
 ## Category Flow
 
-This diagram shows how clearance items flow through the category hierarchy.
+This Sankey diagram visualizes how clearance items are distributed across product categories and subcategories. The width of each flow represents the number of items in that category. This helps identify which types of products are most commonly discounted, revealing patterns in what approaches expiration dates across different store categories.
 
 ```sql category_flow
 WITH parsed_categories AS (
@@ -263,10 +258,8 @@ WITH parsed_categories AS (
         END as level_3
     FROM clearances
     WHERE product_categories_en IS NOT NULL
-      AND open_status IN ${inputs.open_status_filter.value}
-      AND busyness IN ${inputs.busyness_map_filter.value}
       AND store_address_city IN ${inputs.city_filter.value}
-      AND store_brand IN ${inputs.brand_filter.value}
+      AND ${inputs.dimension_filter}
 )
 SELECT
     level_1 as source,
@@ -303,6 +296,10 @@ ORDER BY value DESC
     chartAreaHeight=900
 />
 
+## Clearance Distribution
+
+Compare clearance patterns across store brands and discount levels. These charts help you understand where to find the most items and what discount ranges are most common.
+
 ```sql items_by_brand
 SELECT
     store_brand,
@@ -310,10 +307,8 @@ SELECT
     ROUND(AVG(offer_percent_discount), 1) as avg_discount,
     ROUND(SUM(offer_stock), 0) as total_stock
 FROM clearances
-WHERE open_status IN ${inputs.open_status_filter.value}
-  AND busyness IN ${inputs.busyness_map_filter.value}
-  AND store_address_city IN ${inputs.city_filter.value}
-  AND store_brand IN ${inputs.brand_filter.value}
+WHERE store_address_city IN ${inputs.city_filter.value}
+  AND ${inputs.dimension_filter}
 GROUP BY store_brand
 ORDER BY item_count DESC
 ```
@@ -341,10 +336,8 @@ SELECT
     COUNT(*) as item_count
 FROM clearances
 WHERE offer_percent_discount IS NOT NULL
-  AND open_status IN ${inputs.open_status_filter.value}
-  AND busyness IN ${inputs.busyness_map_filter.value}
   AND store_address_city IN ${inputs.city_filter.value}
-  AND store_brand IN ${inputs.brand_filter.value}
+  AND ${inputs.dimension_filter}
 GROUP BY 1, 2
 ORDER BY sort_order
 ```
