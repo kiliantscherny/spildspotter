@@ -198,9 +198,7 @@ def salling_food_waste_source(zip_codes: list[str]):
 
 pipeline = dlt.pipeline(
     pipeline_name="salling_food_waste_pipeline",
-    destination=dlt.destinations.duckdb(
-        "evidence-app/sources/food_waste/salling_food_waste.duckdb"
-    ),
+    destination=dlt.destinations.duckdb("sources/food_waste/salling_food_waste.duckdb"),
     dataset_name="salling_food_waste_pipeline",
     progress="log",
     dev_mode=False,
@@ -223,7 +221,7 @@ if __name__ == "__main__":
     print("STEP 2: Extracting unique zip codes from stores")  # noqa: T201
     print("=" * 60 + "\n")  # noqa: T201
 
-    conn = duckdb.connect("evidence-app/sources/food_waste/salling_food_waste.duckdb")
+    conn = duckdb.connect("sources/food_waste/salling_food_waste.duckdb")
     zip_codes_result = conn.execute("""
         SELECT DISTINCT address__zip
         FROM salling_food_waste_pipeline.all_stores

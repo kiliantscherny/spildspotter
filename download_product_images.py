@@ -19,8 +19,8 @@ import requests
 from PIL import Image
 
 # Configuration
-DB_PATH = "evidence-app/sources/food_waste/salling_food_waste.duckdb"
-STATIC_DIR = Path("evidence-app/static/product-images")
+DB_PATH = "sources/food_waste/salling_food_waste.duckdb"
+STATIC_DIR = Path("static/product-images")
 SCHEMA_NAME = "salling_food_waste_pipeline"  # Fixed schema name from dlt pipeline
 MAX_WORKERS = 10  # Number of concurrent download threads
 

@@ -17,17 +17,17 @@ images:
 
 # Build Evidence sources
 sources:
-    cd ./evidence-app && npm run sources
+    npm run sources
 
 # Start Evidence development server
 dev:
-    cd ./evidence-app && npm run dev
+    npm run dev
 
 # Run pipeline and images, then build sources
 build: pipeline images sources
 
 # Clean up generated files
 clean:
-    rm -rf evidence-app/sources/food_waste/salling_food_waste_pipeline.duckdb
-    rm -rf evidence-app/static/product-images/*.jpg
+    rm -rf sources/food_waste/salling_food_waste_pipeline.duckdb
+    rm -rf static/product-images/*.jpg
     rm -rf .dlt/

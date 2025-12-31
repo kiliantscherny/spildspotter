@@ -50,7 +50,6 @@ An interactive dashboard that visualizes food waste clearance data from Salling 
 
 5. **Launch the Evidence app:**
    ```bash
-   cd evidence-app
    npm install
    npm run dev
    ```
@@ -60,14 +59,14 @@ An interactive dashboard that visualizes food waste clearance data from Salling 
 ```
 ├── salling_food_waste_pipeline.py  # Data ingestion from Salling API
 ├── download_product_images.py      # Downloads product images
-├── evidence-app/                   # Evidence dashboard
-│   ├── pages/                      # Dashboard pages
-│   ├── sources/                    # Database connections
-│   └── static/                     # Static assets (images)
+├── pages/                           # Evidence dashboard pages
+├── static/                          # Static assets (images)
+├── evidence.config.yaml             # Evidence configuration
 ├── .dlt/
-│   ├── config.toml                 # dlt configuration
-│   └── secrets.toml                # API keys (not in git)
-├── pyproject.toml                  # Python dependencies
+│   ├── config.toml                  # dlt configuration
+│   └── secrets.toml                 # API keys (not in git)
+├── pyproject.toml                   # Python dependencies
+├── package.json                     # Node.js dependencies
 └── README.md
 ```
 

@@ -40,21 +40,21 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: evidence-app/package-lock.json
 
       - name: Install dependencies
-        run: cd evidence-app && npm install
+        run: npm install
 
-      - name: Build Evidence app
+      - name: build
         env:
           BASE_PATH: "/${{ github.event.repository.name }}"
         run: |
-          cd evidence-app && npm run sources && npm run build
+          npm run sources
+          npm run build
 
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "evidence-app/build/${{ github.event.repository.name }}"
+          path: "build/${{ github.event.repository.name }}"
 
   deploy:
     needs: build
