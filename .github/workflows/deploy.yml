@@ -40,6 +40,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: evidence-app/package-lock.json
 
       - name: Install dependencies
         run: cd evidence-app && npm install
