@@ -35,7 +35,7 @@ The customer flow data shows how busy stores typically are at the current hour, 
 
 </AccordionItem>
 
-<AccordionItem title="About the Food Waste API">
+<AccordionItem title="About the food waste data">
 
 The [Salling Group Food Waste API](https://developer.sallinggroup.com/api-reference#apis-food-waste) provides access to over **thousands of discounted items daily** across Føtex, Netto, and Bilka stores throughout Denmark. This API enables customers to find heavily discounted products nearing their expiration dates, helping to reduce food waste while saving money.
 
@@ -300,6 +300,22 @@ ORDER BY value DESC
 
 Compare clearance patterns across store brands and discount levels. These charts help you understand where to find the most items and what discount ranges are most common.
 
+```sql discount_by_brand
+SELECT
+    store_brand,
+    MIN(offer_percent_discount) as min,
+    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY offer_percent_discount) as q1,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY offer_percent_discount) as median,
+    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY offer_percent_discount) as q3,
+    MAX(offer_percent_discount) as max
+FROM clearances
+WHERE offer_percent_discount IS NOT NULL
+  AND store_address_city IN ${inputs.city_filter.value}
+  AND ${inputs.dimension_filter}
+GROUP BY store_brand
+ORDER BY median DESC
+```
+
 ```sql items_by_brand
 SELECT
     store_brand,
@@ -342,13 +358,13 @@ GROUP BY 1, 2
 ORDER BY sort_order
 ```
 
-<Grid cols=2>
+<Grid cols=3>
 <BarChart
 data={items_by_brand}
 x=store_brand
 y=item_count
 title="Clearance Items by Store Brand"
-colorPalette={['#8b5cf6', '#06b6d4']}
+colorPalette={['#8b5cf6']}
 swapXY=true
 />
 
@@ -356,7 +372,21 @@ swapXY=true
 data={discount_distribution}
 x=discount_range
 y=item_count
-title="Discount Distribution"
+title="Discount Distribution by Percentage Range"
 sort=false
-colorPalette={['#8b5cf6', '#06b6d4']}/>
+colorPalette={['#3b82f6']}/>
+
+<BoxPlot
+title="Discount Distribution by Brand"
+data={discount_by_brand}
+name=store_brand
+intervalBottom=q1
+midpoint=median
+intervalTop=q3
+min=min
+max=max
+yFmt='#0.0"%"'
+color=store_brand
+yMin=0
+/>
 </Grid>

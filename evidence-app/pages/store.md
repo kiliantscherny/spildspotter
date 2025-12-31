@@ -22,13 +22,20 @@ FROM stores
 ORDER BY store_brand, store_name
 ```
 
+```sql default_store
+SELECT COALESCE(
+    (SELECT store_name FROM stores WHERE store_name = 'føtex Fisketorvet, København' LIMIT 1),
+    (SELECT store_name FROM stores ORDER BY store_brand, store_name LIMIT 1)
+) as default_store_name
+```
+
 <Dropdown
     name=store_filter
     data={store_list}
     value=store_name
     label=store_label
     title="Select a Store"
-    defaultValue="føtex Fisketorvet, København"
+    defaultValue={default_store[0].default_store_name}
 />
 
 {#if inputs.store_filter.value}
