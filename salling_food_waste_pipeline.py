@@ -32,7 +32,7 @@ def salling_stores_source():
                 response = requests.get(
                     "https://api.sallinggroup.com/v2/stores",
                     headers={"Authorization": f"Bearer {access_token}"},
-                    params={"per_page": 10, "country": "DK"},
+                    params={"per_page": 1000, "country": "DK"},
                     timeout=30,
                 )
                 if response.status_code == 429:
