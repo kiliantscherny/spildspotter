@@ -2,6 +2,9 @@ appearance:
   default: dark
   switcher: true
 
+deployment:
+  basePath: /spildspotter
+
 # Modern Dark Mode - Blue, Purple, Green Palette
 theme:
   colorPalettes:
