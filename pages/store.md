@@ -165,10 +165,10 @@ SELECT
     busyness,
     customer_flow_pct,
     CASE
-        WHEN product_image IS NULL OR product_image = '' THEN '/product-images/placeholder.svg'
-        WHEN product_image LIKE '%/image' THEN '/product-images/placeholder.svg'
-        WHEN LENGTH(product_image) < 20 THEN '/product-images/placeholder.svg'
-        ELSE '/product-images/' || SUBSTRING(MD5(product_image), 1, 16) || '.jpg'
+        WHEN product_image IS NULL OR product_image = '' THEN '/spildspotter/product-images/placeholder.svg'
+        WHEN product_image LIKE '%/image' THEN '/spildspotter/product-images/placeholder.svg'
+        WHEN LENGTH(product_image) < 20 THEN '/spildspotter/product-images/placeholder.svg'
+        ELSE '/spildspotter/product-images/' || SUBSTRING(MD5(product_image), 1, 16) || '.jpg'
     END as product_image_local
 FROM clearances
 WHERE offer_stock > 0
