@@ -49,8 +49,7 @@ jobs:
         env:
           BASE_PATH: "/${{ github.event.repository.name }}"
         run: |
-          cd evidence-app && npm run sources
-          cd evidence-app && npm run build
+          cd evidence-app && npm run sources && npm run build
 
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
