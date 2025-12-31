@@ -8,6 +8,7 @@
 
 <EvidenceDefaultLayout
   {data}
+  logo="{base}/spildspotter-logo.png"
   hideSidebar={true}
   hideBreadcrumbs={true}
   hideTOC={true}
