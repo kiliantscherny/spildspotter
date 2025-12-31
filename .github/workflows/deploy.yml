@@ -45,11 +45,12 @@ jobs:
       - name: Install dependencies
         run: cd evidence-app && npm install
 
-      - name: build
+      - name: Build Evidence app
         env:
-          BASE_PATH: "/${{ github.event.repository.name }}"
+          BASE_PATH: "/${{ github.event.repository.name }}/evidence-app"
         run: |
-          cd evidence-app && npm run sources && npm run build
+          npm run sources
+          npm run build
 
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
