@@ -305,8 +305,7 @@ if __name__ == "__main__":
         """) as cursor:
             zip_codes_result = cursor.fetchall()
 
-    zip_codes = ["2300", "2100"]
-    # zip_codes = [row[0] for row in zip_codes_result]
+    zip_codes = [row[0] for row in zip_codes_result]
     logger.info(f"Found {len(zip_codes)} unique zip codes")
     logger.debug(f"Zip codes sample: {zip_codes[:5]}")
 
