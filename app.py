@@ -124,6 +124,7 @@ def get_store_clearances(store_id: str) -> tuple[dict, ...]:
             INNER JOIN {SCHEMA_NAME}.food_waste_stores__clearances c
                 ON fw._dlt_id = c._dlt_parent_id
             WHERE s.id = ?
+            AND CAST(c.offer__stock AS DOUBLE) > 0
             ORDER BY c.offer__end_time ASC
         """,
             [store_id],

@@ -9,4 +9,5 @@ SELECT
     s.longitude AS store_longitude,
     s.type AS store_type
 FROM salling_data.all_stores s
-
+INNER JOIN salling_data.food_waste_stores fw
+    ON s.id = fw.store__id
