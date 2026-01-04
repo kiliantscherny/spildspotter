@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages and Cloud Run
 
 on:
   push:
@@ -6,6 +6,10 @@ on:
   schedule:
     - cron: "0 9 * * *"
   workflow_dispatch:
+
+env:
+  SERVICE_NAME: spildspotter-app
+  IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_NAME }}/spildspotter-app
 
 jobs:
   build:
@@ -72,3 +76,51 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+  deploy-cloud-run:
+    name: Deploy Gradio App to Cloud Run
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY_JSON }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ secrets.GCP_PROJECT_LOCATION }}
+          source: .
+          env_vars: |
+            GCP_PROJECT_NAME=${{ secrets.GCP_PROJECT_NAME }}
+            GCP_PROJECT_LOCATION=${{ secrets.GCP_PROJECT_LOCATION }}
+            GOOGLE_SERVICE_ACCOUNT_KEY_BASE64=${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY_BASE64 }}
+          flags: |
+            --allow-unauthenticated
+            --memory=2Gi
+            --cpu=2
+            --timeout=3600
+            --concurrency=80
+            --min-instances=0
+            --max-instances=10
+            --no-cpu-throttling
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Cloud Run Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Service:** ${{ env.SERVICE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** ${{ secrets.GCP_PROJECT_LOCATION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Visit your app at: ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
