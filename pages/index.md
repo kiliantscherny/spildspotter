@@ -1,5 +1,5 @@
 ---
-title: Salling Food Waste Dashboard
+title: Spild Spotter food waste dashboard
 full_width: true
 ---
 

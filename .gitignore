@@ -44,3 +44,5 @@ static/data
 .vscode/settings.json
 .env
 .evidence/meta
+
+gradio_app.log
