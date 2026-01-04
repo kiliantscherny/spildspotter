@@ -1,5 +1,5 @@
 [project]
-name = "salling-food-waste-app"
+name = "spildspotter"
 version = "0.1.0"
 description = "Food waste data app using Salling Group clearance data"
 readme = "README.md"
@@ -9,4 +9,12 @@ dependencies = [
     "requests>=2.31.0",
     "pillow>=10.0.0",
     "loguru>=0.7.3",
+]
+
+[dependency-groups]
+ai-app = [
+    "duckdb>=1.4.3",
+    "google-auth>=2.45.0",
+    "google-genai>=1.56.0",
+    "gradio>=6.2.0",
 ]
