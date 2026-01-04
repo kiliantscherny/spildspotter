@@ -811,7 +811,15 @@ def create_app() -> tuple[gr.Blocks, str, gr.themes.Base]:
 
 if __name__ == "__main__":
     app, css, theme = create_app()
+
+    # Get port from environment (for Cloud Run) or use default
+    port = int(os.getenv("PORT", "7860"))
+    server_name = os.getenv("GRADIO_SERVER_NAME", "0.0.0.0")
+
     app.launch(
         css=css,
         theme=theme,
+        server_name=server_name,
+        server_port=port,
+        share=False,  # Don't create public Gradio link when deployed
     )

@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+gradio_app.log
+
+# Node (if any)
+node_modules/
+package-lock.json
+
+# Data (don't include large files, except the database we need)
+*.csv
+*.parquet
+
+# OS
+.DS_Store
+Thumbs.db
+
+# DLT
+.dlt/state/
+.dlt/pipelines/
+
+# Evidence
+.evidence/
+
+# Documentation
+README.md
+docs/
+
+# Cache
+.ruff_cache/
+.mypy_cache/
+
+# Other
+*.md
+!README.md
+justfile
+.mcp.json
+.npmrc
+.python-version
