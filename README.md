@@ -15,6 +15,19 @@
 
 Welcome to Spild Spotter, a humble side project to make data on food waste useful and actionable – with a little help from AI 🤖.
 
+<details>
+<summary><code>Watch a demo video below 📼</code></summary>
+
+<br>
+
+**Click the video below to open it in a new tab**
+
+<a href="https://youtu.be/vt5fpE0bzSY" target="_blank" rel="noopener noreferrer">
+  <img src="https://github.com/user-attachments/assets/bc067ba4-4298-4ee0-8519-98be4e4378b9" alt="Watch the video">
+</a>
+
+</details>
+
 This project consists of two complementary applications:
 
 ### 1. [Evidence Dashboard](kiliantscherny.github.io/spildspotter/)
