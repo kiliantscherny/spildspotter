@@ -22,7 +22,7 @@ Welcome to Spild Spotter, a humble side project to make data on food waste usefu
 
 **Click the video below to open it in a new tab**
 
-<a href="https://youtu.be/vt5fpE0bzSY" target="_blank" rel="noopener noreferrer">
+<a href="https://drive.google.com/file/d/1o9FPvatsnsa-v1nfx_DJYfQhtMJD_rzK/view?usp=sharing" target="_blank" rel="noopener noreferrer">
   <img src="https://github.com/user-attachments/assets/bc067ba4-4298-4ee0-8519-98be4e4378b9" alt="Watch the video">
 </a>
 
@@ -68,6 +68,49 @@ A conversational AI interface for personalized recipe recommendations based on r
 - [**Google Cloud Run**](https://cloud.google.com/): Serverless deployment for the AI app
 
 ## Setup
+
+### Quick Start (with Just)
+
+If you have [just](https://github.com/casey/just) installed, you can use these commands:
+
+1. **Install dependencies:**
+
+   ```bash
+   uv sync
+   npm install
+   ```
+
+2. **Configure API keys:**
+
+   Create `.dlt/secrets.toml`:
+
+   ```toml
+   [salling_food_waste_source]
+   access_token = "your_salling_api_token"
+   ```
+
+   Get your Salling Group API token from: https://developer.sallinggroup.com/
+
+3. **Run everything:**
+
+   ```bash
+   just all
+   ```
+
+   This runs the pipeline, downloads images, builds sources, and starts the dev server.
+
+**Available Just commands:**
+
+- `just all` - Complete setup and start Evidence dev server
+- `just pipeline` - Run the data pipeline only
+- `just images` - Download product images only
+- `just sources` - Build Evidence sources only
+- `just dev` - Start Evidence dev server only
+- `just ai` - Start Gradio AI app
+- `just build` - Run pipeline, images, and build sources
+- `just clean` - Clean up generated files
+
+### Manual Setup
 
 1. **Install dependencies:**
 

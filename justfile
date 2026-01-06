@@ -23,6 +23,10 @@ sources:
 dev:
     npm run dev
 
+# Start Gradio AI app
+ai:
+    uv run app.py
+
 # Run pipeline and images, then build sources
 build: pipeline images sources
 
