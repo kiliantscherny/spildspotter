@@ -20,7 +20,7 @@ Welcome to Spild Spotter, a humble side project to make data on food waste usefu
 
 <br>
 
-**Click the video below to open it in a new tab**
+**Click the video below to open it**
 
 <a href="https://drive.google.com/file/d/1o9FPvatsnsa-v1nfx_DJYfQhtMJD_rzK/view?usp=sharing" target="_blank" rel="noopener noreferrer">
   <img src="https://github.com/user-attachments/assets/bc067ba4-4298-4ee0-8519-98be4e4378b9" alt="Watch the video">
@@ -30,7 +30,7 @@ Welcome to Spild Spotter, a humble side project to make data on food waste usefu
 
 This project consists of two complementary applications:
 
-### 1. [Evidence Dashboard](kiliantscherny.github.io/spildspotter/)
+### 1. [Evidence Dashboard](https://kiliantscherny.github.io/spildspotter/)
 
 An interactive data exploration dashboard for analyzing food waste clearance data:
 
