@@ -1,0 +1,18 @@
+[project]
+name = "spildspotter-api"
+version = "0.1.0"
+description = "FastAPI backend for Spild Spotter chat application"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "duckdb>=0.10.0",
+    "google-genai>=0.4.0",
+    "google-auth>=2.27.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.6.0",
+    "pytz>=2024.1",
+]
+
+[dependency-groups]
+dev = []
