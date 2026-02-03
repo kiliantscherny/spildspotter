@@ -7,6 +7,8 @@ export interface ApiStore {
   label: string;
   city: string;
   brand: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface ApiClearanceItem {

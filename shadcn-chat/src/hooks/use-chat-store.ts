@@ -107,10 +107,10 @@ export function useChatStore() {
       });
   }, []);
 
-  // Load stores when brand changes (or on mount for all stores)
+  // Load all stores on mount
   useEffect(() => {
     setStoresLoading(true);
-    fetchStores(selectedBrand || undefined)
+    fetchStores()
       .then((data: ApiStore[]) => {
         setStores(
           data.map((s) => ({
@@ -118,6 +118,8 @@ export function useChatStore() {
             label: s.label,
             city: s.city,
             brand: s.brand,
+            latitude: s.latitude,
+            longitude: s.longitude,
           }))
         );
         setStoresLoading(false);
@@ -126,7 +128,7 @@ export function useChatStore() {
         console.error("Failed to load stores:", err);
         setStoresLoading(false);
       });
-  }, [selectedBrand]);
+  }, []);
 
   // Load store details and clearance items when store changes
   useEffect(() => {
@@ -185,14 +187,8 @@ export function useChatStore() {
     (storeId: string) => {
       setSelectedStoreId(storeId);
       setRawMessages([]);
-
-      // Also update brand to match the selected store
-      const store = stores.find((s) => s.id === storeId);
-      if (store && store.brand !== selectedBrand) {
-        setSelectedBrand(store.brand);
-      }
     },
-    [stores, selectedBrand, setRawMessages]
+    [setRawMessages]
   );
 
   // Clear chat

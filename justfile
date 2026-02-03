@@ -30,6 +30,23 @@ ai:
 # Run pipeline and images, then build sources
 build: pipeline images sources
 
+# Start shadcn chat frontend (Next.js)
+shadcn:
+    cd shadcn-chat && npm run dev
+
+# Start shadcn chat backend (FastAPI)
+shadcn-backend:
+    cd shadcn-chat/backend && uv run uvicorn main:app --reload --port 8000
+
+# Start both shadcn frontend and backend
+shadcn-all:
+    cd shadcn-chat && npm run dev:all
+
+# Install shadcn chat dependencies
+shadcn-install:
+    cd shadcn-chat && npm install
+    cd shadcn-chat/backend && uv sync
+
 # Clean up generated files
 clean:
     rm -rf sources/food_waste/salling_food_waste_pipeline.duckdb

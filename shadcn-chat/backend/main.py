@@ -94,23 +94,23 @@ def table_exists(conn, table_name: str) -> bool:
 
 @lru_cache(maxsize=1)
 def get_brands() -> tuple[str, ...]:
-    """Get all unique store brands."""
+    """Get all unique store brands that have clearance items."""
     conn = get_db_connection()
     try:
-        if not table_exists(conn, "food_waste_stores"):
-            brands = conn.execute(f"""
-                SELECT DISTINCT brand
-                FROM {SCHEMA_NAME}.all_stores
-                ORDER BY brand
-            """).fetchall()
-            return tuple(b[0] for b in brands)
+        if not table_exists(conn, "food_waste_stores") or not table_exists(conn, "food_waste_stores__clearances"):
+            # No clearance data available, return empty
+            return ()
 
+        # Only return brands that have stores with actual clearance items
         brands = conn.execute(f"""
-            SELECT DISTINCT brand
+            SELECT DISTINCT s.brand
             FROM {SCHEMA_NAME}.all_stores s
             INNER JOIN {SCHEMA_NAME}.food_waste_stores fw
                 ON s.id = fw.store__id
-            ORDER BY brand
+            INNER JOIN {SCHEMA_NAME}.food_waste_stores__clearances c
+                ON fw._dlt_id = c._dlt_parent_id
+            WHERE CAST(c.offer__stock AS DOUBLE) > 0
+            ORDER BY s.brand
         """).fetchall()
         return tuple(b[0] for b in brands)
     finally:
@@ -118,42 +118,45 @@ def get_brands() -> tuple[str, ...]:
 
 
 @lru_cache(maxsize=1)
-def get_all_stores() -> tuple[tuple[str, str, str, str], ...]:
-    """Get all stores that have clearance items."""
+def get_all_stores() -> tuple[tuple[str, str, str, str, float | None, float | None], ...]:
+    """Get all stores that have clearance items with stock > 0."""
     conn = get_db_connection()
     try:
-        if not table_exists(conn, "food_waste_stores"):
-            stores = conn.execute(f"""
-                SELECT DISTINCT
-                    id,
-                    name,
-                    address__street,
-                    address__city,
-                    address__zip,
-                    brand
-                FROM {SCHEMA_NAME}.all_stores
-                ORDER BY brand, address__city, name
-            """).fetchall()
-        else:
-            stores = conn.execute(f"""
-                SELECT DISTINCT
-                    s.id,
-                    s.name,
-                    s.address__street,
-                    s.address__city,
-                    s.address__zip,
-                    s.brand
-                FROM {SCHEMA_NAME}.all_stores s
-                INNER JOIN {SCHEMA_NAME}.food_waste_stores fw
-                    ON s.id = fw.store__id
-                ORDER BY s.brand, s.address__city, s.name
-            """).fetchall()
+        if not table_exists(conn, "food_waste_stores") or not table_exists(conn, "food_waste_stores__clearances"):
+            # No clearance data available, return empty
+            return ()
+
+        # Only return stores that have actual clearance items with stock
+        stores = conn.execute(f"""
+            SELECT DISTINCT
+                s.id,
+                s.name,
+                s.address__street,
+                s.address__city,
+                s.address__zip,
+                s.brand,
+                s.latitude,
+                s.longitude
+            FROM {SCHEMA_NAME}.all_stores s
+            INNER JOIN {SCHEMA_NAME}.food_waste_stores fw
+                ON s.id = fw.store__id
+            INNER JOIN {SCHEMA_NAME}.food_waste_stores__clearances c
+                ON fw._dlt_id = c._dlt_parent_id
+            WHERE CAST(c.offer__stock AS DOUBLE) > 0
+            ORDER BY s.brand, s.address__city, s.name
+        """).fetchall()
 
         results = []
         for store in stores:
-            store_id, name, street, city, _, brand = store
-            label = f"{brand} - {city} - {name}, {street}"
-            results.append((store_id, label, city, brand))
+            store_id, name, street, city, zip_code, brand, lat, lng = store
+            # Format brand name nicely
+            display_brand = {
+                "foetex": "Føtex",
+                "bilka": "Bilka",
+                "netto": "Netto",
+            }.get(brand.lower(), brand.title())
+            label = f"{display_brand} - {name}, {street}, {zip_code} {city}"
+            results.append((store_id, label, city, display_brand, lat, lng))
 
         return tuple(results)
     finally:
@@ -198,8 +201,15 @@ def get_store_clearances(store_id: str) -> tuple[dict, ...]:
                 c.product__description,
                 c.product__categories__en,
                 c.product__image,
-                CAST(c.offer__new_price AS DOUBLE) AS offer__new_price,
-                CAST(c.offer__original_price AS DOUBLE) AS offer__original_price,
+                COALESCE(
+                    CAST(c.offer__new_price AS DOUBLE),
+                    c.offer__new_price__v_double,
+                    0
+                ) AS offer__new_price,
+                COALESCE(
+                    CAST(c.offer__original_price AS DOUBLE),
+                    0
+                ) AS offer__original_price,
                 CAST(c.offer__percent_discount AS DOUBLE) AS offer__percent_discount,
                 CAST(c.offer__stock AS DOUBLE) AS offer__stock,
                 c.offer__stock_unit,
@@ -231,6 +241,27 @@ def sanitize_text(text: str | None) -> str:
     return text.encode("utf-8", errors="replace").decode("utf-8")
 
 
+def to_title_case(text: str | None) -> str:
+    """Convert text to title case (proper case)."""
+    if text is None:
+        return ""
+    # First sanitize, then convert to title case
+    sanitized = sanitize_text(text)
+    # Handle all-caps text by converting to title case
+    # This preserves already properly cased text
+    if sanitized.isupper():
+        return sanitized.title()
+    return sanitized
+
+
+def format_price(price: float) -> str:
+    """Format price in Danish style: '20.- kr' or '20.34 kr'."""
+    if price == int(price):
+        return f"{int(price)}.- kr"
+    else:
+        return f"{price:.2f} kr"
+
+
 def format_clearance_items(clearances: tuple[dict, ...]) -> str:
     """Format clearance items into a readable string for the LLM."""
     if not clearances:
@@ -238,7 +269,7 @@ def format_clearance_items(clearances: tuple[dict, ...]) -> str:
 
     lines = []
     for item in clearances:
-        description = sanitize_text(item.get("product__description")) or "Unknown item"
+        description = to_title_case(item.get("product__description")) or "Unknown item"
         category = sanitize_text(item.get("product__categories__en")) or "Uncategorized"
         new_price = item.get("offer__new_price", 0) or 0
         original_price = item.get("offer__original_price", 0) or 0
@@ -247,8 +278,8 @@ def format_clearance_items(clearances: tuple[dict, ...]) -> str:
         stock_unit = sanitize_text(item.get("offer__stock_unit")) or "units"
 
         lines.append(
-            f"- {description} ({category}): {new_price:.2f} DKK "
-            f"(was {original_price:.2f} DKK, {discount:.0f}% off), "
+            f"- {description} ({category}): {format_price(new_price)} "
+            f"(was {format_price(original_price)}, {discount:.0f}% off), "
             f"~{stock:.2f} {stock_unit} available"
         )
 
@@ -307,6 +338,8 @@ class Store(BaseModel):
     label: str
     city: str
     brand: str
+    latitude: float | None = None
+    longitude: float | None = None
 
 
 class ClearanceItem(BaseModel):
@@ -365,7 +398,7 @@ async def list_stores(brand: str | None = None):
     try:
         stores = get_all_stores()
         result = [
-            Store(id=s[0], label=s[1], city=s[2], brand=s[3])
+            Store(id=s[0], label=s[1], city=s[2], brand=s[3], latitude=s[4], longitude=s[5])
             for s in stores
             if not brand or s[3] == brand
         ]
@@ -407,8 +440,8 @@ async def get_clearances(store_id: str):
             items.append(
                 ClearanceItem(
                     image=image_url,
-                    product=sanitize_text(item.get("product__description")) or "Unknown",
-                    category=sanitize_text(item.get("product__categories__en")) or "N/A",
+                    product=to_title_case(item.get("product__description")) or "Unknown",
+                    category=sanitize_text(item.get("product__categories__en")) or "",
                     new_price=f"{new_price:.2f} DKK",
                     original_price=f"{original_price:.2f} DKK",
                     discount=f"{discount:.0f}%",

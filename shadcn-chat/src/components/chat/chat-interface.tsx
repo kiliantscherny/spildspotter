@@ -3,7 +3,7 @@
 import { useChatStore } from "@/hooks/use-chat-store";
 import { Chat } from "@/components/ui/chat";
 import { Navbar } from "./navbar";
-import { StoreSelector } from "./store-selector";
+import { SearchableStoreSelector } from "../common/searchable-store-selector";
 import { StoreInfoBar } from "./store-info-bar";
 import { ClearancePanel } from "./clearance-panel";
 import { MobileClearancePanel } from "./mobile-clearance-panel";
@@ -19,9 +19,7 @@ const EXAMPLE_PROMPTS = [
 
 export function ChatInterface() {
   const {
-    brands,
     stores,
-    selectedBrand,
     selectedStoreId,
     storeInfo,
     clearanceItems,
@@ -30,10 +28,8 @@ export function ChatInterface() {
     handleInputChange,
     isLoading,
     error,
-    brandsLoading,
     storesLoading,
     clearanceLoading,
-    handleBrandChange,
     handleStoreChange,
     handleSubmit,
     append,
@@ -43,23 +39,21 @@ export function ChatInterface() {
   } = useChatStore();
 
   return (
-    <div className="flex h-dvh max-h-dvh overflow-hidden bg-background">
+    <div className="flex h-dvh max-h-dvh overflow-hidden">
       {/* Main chat area */}
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
         {/* Fixed header area */}
         <div className="flex-shrink-0">
           <Navbar onClearChat={clearChat} />
 
-          <StoreSelector
-            brands={brands}
-            stores={stores}
-            selectedBrand={selectedBrand}
-            selectedStoreId={selectedStoreId}
-            onBrandChange={handleBrandChange}
-            onStoreChange={handleStoreChange}
-            brandsLoading={brandsLoading}
-            storesLoading={storesLoading}
-          />
+          <div className="p-4 border-b bg-muted/30">
+            <SearchableStoreSelector
+              stores={stores}
+              selectedStoreId={selectedStoreId}
+              onStoreChange={handleStoreChange}
+              storesLoading={storesLoading}
+            />
+          </div>
 
           <StoreInfoBar
             storeInfo={storeInfo}
