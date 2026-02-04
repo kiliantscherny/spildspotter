@@ -178,9 +178,10 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   pointer-events: none;
   background-size: 40px 40px;
+  background-position: center center;
   background-image: linear-gradient(to right, #e4e4e7 1px, transparent 1px),
     linear-gradient(to bottom, #e4e4e7 1px, transparent 1px);
 }
@@ -188,6 +189,22 @@ body::before {
 .dark body::before {
   background-image: linear-gradient(to right, #262626 1px, transparent 1px),
     linear-gradient(to bottom, #262626 1px, transparent 1px);
+}
+
+/* Radial gradient overlay for faded edges */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: #fafafa;
+  mask-image: radial-gradient(ellipse at center, transparent 20%, black);
+  -webkit-mask-image: radial-gradient(ellipse at center, transparent 20%, black);
+}
+
+.dark body::after {
+  background: #0a0e1a;
 }
 
 /* Prose styling for markdown in chat */

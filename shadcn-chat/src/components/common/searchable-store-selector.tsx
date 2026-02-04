@@ -86,6 +86,7 @@ interface SearchableStoreSelectorProps {
   selectedStoreId: string;
   onStoreChange: (storeId: string) => void;
   storesLoading: boolean;
+  centered?: boolean;
 }
 
 export function SearchableStoreSelector({
@@ -93,6 +94,7 @@ export function SearchableStoreSelector({
   selectedStoreId,
   onStoreChange,
   storesLoading,
+  centered = false,
 }: SearchableStoreSelectorProps) {
   const [storeSearchOpen, setStoreSearchOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -193,14 +195,17 @@ export function SearchableStoreSelector({
   return (
     <div className="space-y-3">
       {/* Search and location button inline */}
-      <div className="flex gap-2">
+      <div className={cn("flex gap-2", centered ? "justify-center flex-wrap" : "")}>
         <Popover open={storeSearchOpen} onOpenChange={setStoreSearchOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               role="combobox"
               aria-expanded={storeSearchOpen}
-              className="flex-1 justify-between font-normal"
+              className={cn(
+                "justify-between font-normal",
+                centered ? "w-full sm:w-auto sm:min-w-[280px]" : "flex-1"
+              )}
               disabled={storesLoading}
             >
               {selectedStore ? (

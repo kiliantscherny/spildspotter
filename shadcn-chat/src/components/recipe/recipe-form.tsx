@@ -109,7 +109,7 @@ export function RecipeForm({
         <div className="container flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <BrandLink />
-            <span className="text-sm text-muted-foreground">/ Recipe Builder</span>
+            <span className="text-sm text-muted-foreground">/ AI Recipe Builder</span>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" asChild>
@@ -128,7 +128,7 @@ export function RecipeForm({
         <div className="space-y-8">
           {/* Title */}
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold">Build a Recipe</h1>
+            <h1 className="text-3xl font-bold">AI Recipe Builder</h1>
             <p className="text-muted-foreground">
               Get a recipe based on clearance items at your local supermarket
             </p>
@@ -149,6 +149,7 @@ export function RecipeForm({
               selectedStoreId={selectedStoreId}
               onStoreChange={setSelectedStoreId}
               storesLoading={storesLoading}
+              centered
             />
           </div>
 
@@ -160,8 +161,8 @@ export function RecipeForm({
                 <Card
                   key={option.value}
                   className={cn(
-                    "cursor-pointer transition-all hover:border-primary",
-                    mealType === option.value && "border-primary bg-primary/5"
+                    "cursor-pointer transition-all hover:border-primary backdrop-blur-sm bg-white/70 dark:bg-white/10",
+                    mealType === option.value && "border-primary bg-white/90 dark:bg-white/20"
                   )}
                   onClick={() => setMealType(option.value)}
                 >
@@ -171,7 +172,7 @@ export function RecipeForm({
                         "p-3 rounded-full",
                         mealType === option.value
                           ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
+                          : "bg-muted/50"
                       )}
                     >
                       {option.icon}

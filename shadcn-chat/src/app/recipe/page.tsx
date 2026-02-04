@@ -1,7 +1,7 @@
 import { RecipeWizard } from "@/components/recipe";
 
 export const metadata = {
-  title: "Recipe Builder - Spild Spotter",
+  title: "AI Recipe Builder - Spild Spotter",
   description: "Build recipes based on clearance items at your local supermarket",
 };
 

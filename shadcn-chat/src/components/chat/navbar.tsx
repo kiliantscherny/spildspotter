@@ -34,7 +34,7 @@ export function Navbar({ onClearChat, onToggleSidebar, showMenuButton }: NavbarP
         <Button variant="outline" size="sm" asChild>
           <Link href="/recipe">
             <ChefHat className="mr-2 h-4 w-4" />
-            Recipe Builder
+            AI Recipe Builder
           </Link>
         </Button>
         <ThemeToggle />

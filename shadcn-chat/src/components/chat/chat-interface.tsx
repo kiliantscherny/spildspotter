@@ -12,7 +12,7 @@ import { AlertCircle } from "lucide-react";
 
 const EXAMPLE_PROMPTS = [
   "What can I make with the clearance items?",
-  "Suggest a quick dinner recipe",
+  "Suggest a quick dinner recipe under 100kr",
   "Any vegetarian options available?",
   "What's the best deal right now?",
 ];
