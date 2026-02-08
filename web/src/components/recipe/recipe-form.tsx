@@ -107,15 +107,20 @@ export function RecipeForm({
       {/* Header */}
       <header className="border-b bg-background">
         <div className="container flex h-14 items-center justify-between px-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <BrandLink />
-            <span className="text-sm text-muted-foreground">/ AI Recipe Builder</span>
+            <span className="hidden sm:inline text-sm text-muted-foreground">/ AI Recipe Builder</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex">
               <Link href="/chat">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Chat
+              </Link>
+            </Button>
+            <Button variant="outline" size="icon" asChild className="sm:hidden">
+              <Link href="/chat" title="Chat">
+                <MessageSquare className="h-4 w-4" />
               </Link>
             </Button>
             <ThemeToggle />

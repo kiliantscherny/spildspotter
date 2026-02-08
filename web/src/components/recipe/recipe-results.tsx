@@ -114,17 +114,25 @@ export function RecipeResults({
       <header className="sticky top-0 z-10 border-b bg-background">
         <div className="container flex h-14 items-center justify-between px-4">
           <BrandLink />
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex">
               <Link href="/chat">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Chat
               </Link>
             </Button>
+            <Button variant="outline" size="icon" asChild className="sm:hidden">
+              <Link href="/chat" title="Chat">
+                <MessageSquare className="h-4 w-4" />
+              </Link>
+            </Button>
             <ThemeToggle />
-            <Button variant="ghost" size="sm" onClick={onRestart}>
+            <Button variant="ghost" size="sm" onClick={onRestart} className="hidden sm:inline-flex">
               <RotateCcw className="mr-2 h-4 w-4" />
               Start Over
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onRestart} title="Start Over" className="sm:hidden">
+              <RotateCcw className="h-4 w-4" />
             </Button>
           </div>
         </div>

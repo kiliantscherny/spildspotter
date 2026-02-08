@@ -15,7 +15,7 @@ interface NavbarProps {
 export function Navbar({ onClearChat, onToggleSidebar, showMenuButton }: NavbarProps) {
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b bg-background">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {showMenuButton && (
           <Button
             variant="ghost"
@@ -27,14 +27,19 @@ export function Navbar({ onClearChat, onToggleSidebar, showMenuButton }: NavbarP
           </Button>
         )}
         <BrandLink />
-        <span className="text-sm text-muted-foreground">/ Chat</span>
+        <span className="hidden sm:inline text-sm text-muted-foreground">/ Chat</span>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" asChild>
+      <div className="flex items-center gap-1 sm:gap-2">
+        <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex">
           <Link href="/recipe">
             <ChefHat className="mr-2 h-4 w-4" />
             AI Recipe Builder
+          </Link>
+        </Button>
+        <Button variant="outline" size="icon" asChild className="sm:hidden">
+          <Link href="/recipe" title="AI Recipe Builder">
+            <ChefHat className="h-4 w-4" />
           </Link>
         </Button>
         <ThemeToggle />

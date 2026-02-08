@@ -32,6 +32,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const BRAND_LOGOS: Record<string, string> = {
   bilka: "/bilka-logo.png",
@@ -98,6 +99,7 @@ export function SearchableStoreSelector({
 }: SearchableStoreSelectorProps) {
   const [storeSearchOpen, setStoreSearchOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const isMobile = useMediaQuery("(max-width: 640px)");
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
 
@@ -343,26 +345,50 @@ export function SearchableStoreSelector({
                       </span>
                     )}
                   </button>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div
-                        className={cn(
-                          "flex items-center justify-center h-full px-1.5 py-1.5 rounded-r-md border text-xs cursor-help",
-                          selectedStoreId === store.id
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border text-muted-foreground hover:bg-muted/50"
+                  {isMobile ? (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className={cn(
+                            "flex items-center justify-center h-full px-1.5 py-1.5 rounded-r-md border text-xs",
+                            selectedStoreId === store.id
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border text-muted-foreground hover:bg-muted/50"
+                          )}
+                        >
+                          <Info className="h-3 w-3" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="max-w-[calc(100vw-2rem)] w-auto p-3" side="top" align="center">
+                        <p className="font-medium text-sm">{store.label}</p>
+                        {store.city && (
+                          <p className="text-xs text-muted-foreground">{store.city}</p>
                         )}
-                      >
-                        <Info className="h-3 w-3" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="font-medium">{store.label}</p>
-                      {store.city && (
-                        <p className="text-xs text-muted-foreground">{store.city}</p>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
+                      </PopoverContent>
+                    </Popover>
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={cn(
+                            "flex items-center justify-center h-full px-1.5 py-1.5 rounded-r-md border text-xs cursor-help",
+                            selectedStoreId === store.id
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border text-muted-foreground hover:bg-muted/50"
+                          )}
+                        >
+                          <Info className="h-3 w-3" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="font-medium">{store.label}</p>
+                        {store.city && (
+                          <p className="text-xs text-muted-foreground">{store.city}</p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
               );
             })}
