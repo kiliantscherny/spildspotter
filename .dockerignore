@@ -39,7 +39,6 @@ dist/
 # Data files (pipeline generates fresh data during Docker build)
 sources/food_waste/*.duckdb
 sources/food_waste/*.duckdb.wal
-static/product-images/
 
 # Testing
 .pytest_cache/
@@ -54,9 +53,7 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# Evidence (not needed for web app)
-.evidence/
-pages/
+# Data files
 *.csv
 *.parquet
 
@@ -71,5 +68,3 @@ cloudbuild.yaml
 # GitHub workflows (not needed in image)
 .github/
 
-# Image download script (not needed for web app)
-download_product_images.py
