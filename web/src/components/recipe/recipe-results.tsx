@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback } from "react";
 import { Recipe } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,11 +79,11 @@ export function RecipeResults({
   }, [recipe.shoppingList]);
 
   const highlightProductNames = useCallback((instruction: string) => {
-    let highlightedText: (string | JSX.Element)[] = [instruction];
+    let highlightedText: (string | React.JSX.Element)[] = [instruction];
 
     productNames.forEach(name => {
       const regex = new RegExp(`\\b(${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'gi'); // Case-insensitive whole word
-      const newHighlightedText: (string | JSX.Element)[] = [];
+      const newHighlightedText: (string | React.JSX.Element)[] = [];
 
       highlightedText.forEach(part => {
         if (typeof part === 'string') {

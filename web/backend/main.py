@@ -118,7 +118,7 @@ def get_brands() -> tuple[str, ...]:
 
 
 @lru_cache(maxsize=1)
-def get_all_stores() -> tuple[tuple[str, str, str, str, float | None, float | None], ...]:
+def get_all_stores() -> tuple[tuple[str, str, str, str, float | None, float | None, str], ...]:
     """Get all stores that have clearance items with stock > 0."""
     conn = get_db_connection()
     try:
@@ -156,7 +156,7 @@ def get_all_stores() -> tuple[tuple[str, str, str, str, float | None, float | No
                 "netto": "Netto",
             }.get(brand.lower(), brand.title())
             label = f"{display_brand} - {name}, {street}, {zip_code} {city}"
-            results.append((store_id, label, city, display_brand, lat, lng))
+            results.append((store_id, label, city, display_brand, lat, lng, brand.lower()))
 
         return tuple(results)
     finally:
@@ -400,7 +400,7 @@ async def list_stores(brand: str | None = None):
         result = [
             Store(id=s[0], label=s[1], city=s[2], brand=s[3], latitude=s[4], longitude=s[5])
             for s in stores
-            if not brand or s[3] == brand
+            if not brand or s[6] == brand.lower()
         ]
         return result
     except Exception as e:

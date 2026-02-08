@@ -28,9 +28,6 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Gradio
-flagged/
-
 # Environment
 .env
 .env.local
@@ -48,5 +45,3 @@ static/data
 .vscode/settings.json
 .env
 .evidence/meta
-
-gradio_app.log

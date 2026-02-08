@@ -7,6 +7,8 @@ API Documentation: https://developer.sallinggroup.com/api-reference
 """
 
 import logging
+import os
+import sys
 import time
 from typing import Any, Iterator
 
@@ -60,7 +62,15 @@ def fetch_with_retry(
     for attempt in range(max_retries):
         try:
             response = client.get(endpoint, params=params or {})
-            return response.json()
+            data = response.json()
+            # Validate response is a list of dicts (API sometimes returns unexpected formats)
+            if not isinstance(data, list):
+                logger.warning(f"API returned {type(data).__name__} instead of list: {str(data)[:200]}")
+                if attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)
+                    continue
+                return []
+            return data
         except Exception as e:
             error_msg = str(e)
 
@@ -107,7 +117,7 @@ def salling_stores_source():
     Returns:
         DltResource containing all stores data
     """
-    access_token = dlt.secrets["salling_food_waste_source.access_token"]
+    access_token = os.environ.get("SALLING_FOOD_WASTE_SOURCE__ACCESS_TOKEN") or dlt.secrets.get("salling_food_waste_source.access_token", "")
 
     @dlt.resource(
         name="all_stores",
@@ -135,6 +145,9 @@ def salling_stores_source():
         # Process all stores, then yield as batch
         processed_stores = []
         for store_data in stores:
+            if not isinstance(store_data, dict):
+                logger.warning(f"Skipping non-dict store entry: {store_data!r}")
+                continue
             # Transform coordinates array [lon, lat] into separate fields
             coords = store_data.get("coordinates", [])
             if coords and len(coords) >= 2:
@@ -159,7 +172,7 @@ def salling_food_waste_source(zip_codes: list[str]):
     Returns:
         DltResource containing food waste store data
     """
-    access_token = dlt.secrets["salling_food_waste_source.access_token"]
+    access_token = os.environ.get("SALLING_FOOD_WASTE_SOURCE__ACCESS_TOKEN") or dlt.secrets.get("salling_food_waste_source.access_token", "")
 
     @dlt.resource(
         name="food_waste_stores",
@@ -291,6 +304,15 @@ if __name__ == "__main__":
     load_info = pipeline.run(salling_stores_source())
     logger.info(f"Load info: {load_info}")
 
+    # Verify stores were loaded
+    with pipeline.sql_client() as client:
+        with client.execute_query("SELECT COUNT(*) FROM salling_data.all_stores") as cursor:
+            store_count = cursor.fetchone()[0]
+    if store_count == 0:
+        logger.error("No stores were loaded! The Salling API may be returning unexpected data.")
+        sys.exit(1)
+    logger.info(f"Verified {store_count} stores loaded into database")
+
     # Step 2: Extract unique zip codes from the all_stores table
     logger.info("=" * 60)
     logger.info("STEP 2: Extracting unique zip codes from stores")
@@ -307,7 +329,12 @@ if __name__ == "__main__":
 
     zip_codes = [row[0] for row in zip_codes_result]
     logger.info(f"Found {len(zip_codes)} unique zip codes")
-    logger.debug(f"Zip codes sample: {zip_codes[:5]}")
+
+    # Test mode: limit zip codes for faster builds
+    test_limit = int(os.environ.get("PIPELINE_TEST_LIMIT", "0"))
+    if test_limit > 0:
+        zip_codes = zip_codes[:test_limit]
+        logger.info(f"TEST MODE: Limited to {test_limit} zip codes")
 
     # Step 3: Fetch clearance data for all zip codes
     logger.info("=" * 60)

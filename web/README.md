@@ -1,14 +1,20 @@
-# Spild Spotter - shadcn/ui Chat App
+# Spild Spotter - AI Recipe App
 
-A modern chat interface for the Spild Spotter food waste recipe assistant, built with Next.js and shadcn/ui.
+A modern web application for the Spild Spotter food waste recipe assistant, built with Next.js and shadcn/ui.
 
 ## Features
 
-- Modern dark theme UI with shadcn/ui components
-- Store selection with search functionality
-- Real-time clearance items display
-- Streaming AI chat responses powered by Gemini
+- **AI Recipe Builder**: Step-by-step wizard to find the perfect recipe
+  - Location-based store selection
+  - Meal type selection (breakfast, lunch, dinner, snack)
+  - Dietary preferences (vegetarian, vegan, etc.)
+  - Tailored recipe generation with clearance items
+- **Chat Assistant**: Conversational interface for exploring clearance items
+- Store selection with search and location-based suggestions
+- Real-time clearance items display with prices and discounts
+- Streaming AI chat responses powered by Google Gemini
 - Responsive design (mobile + desktop)
+- Light/dark theme support
 - Markdown rendering in chat messages
 
 ## Prerequisites
@@ -68,32 +74,34 @@ From the root project directory:
 
 ```bash
 # Start frontend only
-just shadcn
+just web
 
 # Start backend only
-just shadcn-backend
+just web-backend
 
 # Start both
-just shadcn-all
+just web-all
 
 # Install all dependencies
-just shadcn-install
+just web-install
 ```
 
 ## Architecture
 
 ```
-shadcn-chat/
+web/
 ├── src/
-│   ├── app/              # Next.js app router
+│   ├── app/              # Next.js app router (home, chat, recipe pages)
 │   ├── components/
 │   │   ├── chat/         # Chat-specific components
+│   │   ├── recipe/       # Recipe wizard components
+│   │   ├── common/       # Shared components (brand, store selector)
 │   │   └── ui/           # shadcn/ui components
 │   ├── hooks/            # React hooks (state management)
 │   ├── lib/              # Utilities and API client
 │   └── types/            # TypeScript type definitions
 └── backend/
-    └── main.py           # FastAPI backend
+    └── main.py           # FastAPI backend with Gemini AI
 ```
 
 ## Tech Stack

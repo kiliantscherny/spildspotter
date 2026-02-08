@@ -46,4 +46,3 @@ __pycache__/
 *$py.class
 .venv/
 backend/.venv/
-backend/uv.lock

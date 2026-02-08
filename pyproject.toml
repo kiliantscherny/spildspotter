@@ -11,10 +11,3 @@ dependencies = [
     "loguru>=0.7.3",
 ]
 
-[dependency-groups]
-ai-app = [
-    "duckdb>=1.4.3",
-    "google-auth>=2.45.0",
-    "google-genai>=1.56.0",
-    "gradio>=6.2.0",
-]

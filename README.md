@@ -28,9 +28,21 @@ Welcome to Spild Spotter, a humble side project to make data on food waste usefu
 
 </details>
 
-This project consists of two complementary applications:
+### AI Recipe App
 
-### 1. [Evidence Dashboard](https://kiliantscherny.github.io/spildspotter/)
+A modern web application for getting personalized recipe recommendations based on clearance items:
+
+- **AI Recipe Builder**: A step-by-step wizard that helps you find the perfect recipe
+  - Select your local store (with location-based suggestions)
+  - Choose meal type (breakfast, lunch, dinner, snack)
+  - Set dietary preferences (vegetarian, vegan, etc.)
+  - Get a tailored recipe with ingredients from clearance items
+- **Chat Assistant**: A conversational interface for exploring clearance items and getting recipe suggestions
+  - Ask questions about available products
+  - Get multiple recipe ideas based on what's in stock
+  - Flexible, open-ended exploration
+
+### [Evidence Dashboard](https://kiliantscherny.github.io/spildspotter/)
 
 An interactive data exploration dashboard for analyzing food waste clearance data:
 
@@ -38,15 +50,6 @@ An interactive data exploration dashboard for analyzing food waste clearance dat
 - **Store locations**: Interactive map showing stores throughout Denmark with clearance items on sale
 - **Product insights**: Category breakdowns and discount distributions per supermarket
 - **Customer flow data**: See typical store busyness patterns to plan your visit
-
-### 2. [Gradio AI App](https://spildspotter-app-450148275312.europe-west1.run.app/)
-
-A conversational AI interface for personalized recipe recommendations based on reduced clearance items:
-
-- **Chat with your local supermarket's data**: Ask questions about clearance items at specific stores
-- **AI-powered recipes**: Get recipe suggestions based on available discounted products, factoring in budgets and meal preferences
-- **Save some kroner**: Turn discounted items into inspirational meal ideas
-- **Help reduce food waste**: Items that might otherwise be disposed can be reimagined into new ideas
 
 ## Tech Stack
 
@@ -61,11 +64,12 @@ A conversational AI interface for personalized recipe recommendations based on r
 - [**Evidence**](https://github.com/evidence-dev/evidence): BI framework for creating the interactive dashboard
 - [**GitHub Pages**](https://docs.github.com/en/pages): Static hosting for the Evidence dashboard
 
-### Gradio AI App
+### AI Chat App
 
-- [**Gradio**](https://github.com/gradio-app/gradio): Python web UI framework for the chat interface
+- [**Next.js**](https://nextjs.org/): React framework for the chat interface
+- [**shadcn/ui**](https://ui.shadcn.com/): UI component library
+- [**FastAPI**](https://fastapi.tiangolo.com/): Python backend API
 - [**Google Gemini**](https://docs.cloud.google.com/gemini/docs/resources): AI model for generating recipe recommendations
-- [**Google Cloud Run**](https://cloud.google.com/): Serverless deployment for the AI app
 
 ## Setup
 
@@ -106,7 +110,10 @@ If you have [just](https://github.com/casey/just) installed, you can use these c
 - `just images` - Download product images only
 - `just sources` - Build Evidence sources only
 - `just dev` - Start Evidence dev server only
-- `just ai` - Start Gradio AI app
+- `just web` - Start AI recipe app frontend
+- `just web-backend` - Start AI recipe app backend
+- `just web-all` - Start both frontend and backend
+- `just web-install` - Install web app dependencies
 - `just build` - Run pipeline, images, and build sources
 - `just clean` - Clean up generated files
 
@@ -149,39 +156,51 @@ If you have [just](https://github.com/casey/just) installed, you can use these c
    npm run dev
    ```
 
-6. **Launch the Gradio AI app (optional):**
+6. **Launch the AI Recipe app (optional):**
 
-   Set up Google Cloud credentials:
-
-   ```bash
-   export GOOGLE_SERVICE_ACCOUNT_KEY_BASE64="your_base64_encoded_key"
-   export GCP_PROJECT_NAME="your_project_name"
-   export GCP_PROJECT_LOCATION="your_chosen_region"
-   ```
-
-   Run the app:
+   First, set up Google Cloud credentials in a `.env` file in the project root:
 
    ```bash
-   uv run app.py
+   GOOGLE_SERVICE_ACCOUNT_KEY_BASE64="your_base64_encoded_service_account_key"
+   GCP_PROJECT_NAME="your_gcp_project_name"
+   GCP_PROJECT_LOCATION="your_gcp_region"  # e.g., europe-west1
    ```
+
+   Then install dependencies and start the app:
+
+   ```bash
+   cd web
+   npm install
+   cd backend && uv sync
+   cd ..
+   npm run dev:all
+   ```
+
+   This starts both the Next.js frontend (http://localhost:3000) and FastAPI backend (http://localhost:8000).
 
 ## Project Structure
 
 ```
 ├── salling_food_waste_pipeline.py  # Data ingestion from Salling API
 ├── download_product_images.py      # Downloads product images
-├── app.py                           # Gradio AI chat application
-├── pages/                           # Evidence dashboard pages
-├── static/                          # Static assets (images)
-├── sources/food_waste/              # DuckDB database
-├── evidence.config.yaml             # Evidence configuration
-├── Dockerfile                       # Cloud Run deployment configuration
-├── .github/workflows/deploy.yml     # CI/CD pipeline
+├── web/                            # AI recipe app (Next.js + FastAPI)
+│   ├── src/
+│   │   ├── app/                    # Next.js pages (home, chat, recipe wizard)
+│   │   ├── components/             # React components
+│   │   ├── hooks/                  # Custom React hooks
+│   │   └── lib/                    # Utility functions
+│   └── backend/
+│       └── main.py                 # FastAPI backend with Gemini AI
+├── pages/                          # Evidence dashboard pages
+├── static/                         # Static assets (images)
+├── sources/food_waste/             # DuckDB database
+├── evidence.config.yaml            # Evidence configuration
+├── .github/workflows/deploy.yml    # CI/CD pipeline
 ├── .dlt/
-│   ├── config.toml                  # dlt configuration
-│   └── secrets.toml                 # API keys (not in git)
-├── pyproject.toml                   # Python dependencies
-├── package.json                     # Node.js dependencies
+│   ├── config.toml                 # dlt configuration
+│   └── secrets.toml                # API keys (not in git)
+├── pyproject.toml                  # Python dependencies
+├── package.json                    # Node.js dependencies (Evidence)
 └── README.md
 ```
 

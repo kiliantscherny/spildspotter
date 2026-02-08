@@ -111,7 +111,7 @@ export function SearchableStoreSelector({
     if (!userLocation) return stores;
 
     return stores
-      .map((store) => {
+      .map((store): StoreWithDistance => {
         if (store.latitude && store.longitude) {
           const distance = calculateDistance(
             userLocation.lat,
