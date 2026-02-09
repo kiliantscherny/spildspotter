@@ -13,6 +13,9 @@ ENV/
 *.duckdb
 *.duckdb.wal
 
+# Node
+node_modules/
+
 # IDE
 .idea/
 .vscode/
@@ -24,25 +27,10 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Gradio
-flagged/
-
 # Environment
 .env
 .env.local
 
-static/product-images/
-
-
-.evidence/template
-.svelte-kit
-build
-node_modules
-.DS_Store
-static/data
-*.options.yaml
-.vscode/settings.json
-.env
-.evidence/meta
-
-gradio_app.log
+# Build
+build/
+dist/

@@ -1,0 +1,16 @@
+[environment]
+python-version = "3.13"
+
+[src]
+exclude = ["web/backend/"]  # separate venv — ty can't resolve its third-party imports
+
+[terminal]
+error-on-warning = true
+
+[rules]
+# Enable rules that are off by default
+division-by-zero = "error"
+
+# Promote warnings to errors for stricter checking
+possibly-unresolved-reference = "error"
+possibly-missing-import = "error"

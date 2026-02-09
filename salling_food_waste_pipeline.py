@@ -7,8 +7,11 @@ API Documentation: https://developer.sallinggroup.com/api-reference
 """
 
 import logging
+import os
+import sys
 import time
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 import dlt
 from dlt.sources.helpers.rest_client import RESTClient
@@ -32,9 +35,7 @@ class InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(
-            level, record.getMessage()
-        )
+        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
 def fetch_with_retry(
@@ -60,7 +61,15 @@ def fetch_with_retry(
     for attempt in range(max_retries):
         try:
             response = client.get(endpoint, params=params or {})
-            return response.json()
+            data = response.json()
+            # Validate response is a list of dicts (API sometimes returns unexpected formats)
+            if not isinstance(data, list):
+                logger.warning(f"API returned {type(data).__name__} instead of list: {str(data)[:200]}")
+                if attempt < max_retries - 1:
+                    time.sleep(2**attempt)
+                    continue
+                return []
+            return data
         except Exception as e:
             error_msg = str(e)
 
@@ -68,9 +77,7 @@ def fetch_with_retry(
             if "429" in error_msg:
                 # Try to extract wait time from error or use exponential backoff
                 wait_time = (2**attempt) * 2
-                logger.warning(
-                    f"Rate limited, waiting {wait_time}s before retry {attempt + 1}/{max_retries}"
-                )
+                logger.warning(f"Rate limited, waiting {wait_time}s before retry {attempt + 1}/{max_retries}")
                 time.sleep(wait_time)
                 continue
 
@@ -78,9 +85,7 @@ def fetch_with_retry(
             if any(f"{code}" in error_msg for code in range(500, 600)):
                 if attempt < max_retries - 1:
                     wait_time = 2**attempt
-                    logger.warning(
-                        f"Server error, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})"
-                    )
+                    logger.warning(f"Server error, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})")
                     time.sleep(wait_time)
                     continue
                 logger.error(f"Server error persists after {max_retries} attempts: {e}")
@@ -107,7 +112,9 @@ def salling_stores_source():
     Returns:
         DltResource containing all stores data
     """
-    access_token = dlt.secrets["salling_food_waste_source.access_token"]
+    access_token = os.environ.get("SALLING_FOOD_WASTE_SOURCE__ACCESS_TOKEN") or dlt.secrets.get(
+        "salling_food_waste_source.access_token", ""
+    )
 
     @dlt.resource(
         name="all_stores",
@@ -135,6 +142,9 @@ def salling_stores_source():
         # Process all stores, then yield as batch
         processed_stores = []
         for store_data in stores:
+            if not isinstance(store_data, dict):
+                logger.warning(f"Skipping non-dict store entry: {store_data!r}")
+                continue
             # Transform coordinates array [lon, lat] into separate fields
             coords = store_data.get("coordinates", [])
             if coords and len(coords) >= 2:
@@ -159,7 +169,9 @@ def salling_food_waste_source(zip_codes: list[str]):
     Returns:
         DltResource containing food waste store data
     """
-    access_token = dlt.secrets["salling_food_waste_source.access_token"]
+    access_token = os.environ.get("SALLING_FOOD_WASTE_SOURCE__ACCESS_TOKEN") or dlt.secrets.get(
+        "salling_food_waste_source.access_token", ""
+    )
 
     @dlt.resource(
         name="food_waste_stores",
@@ -168,9 +180,7 @@ def salling_food_waste_source(zip_codes: list[str]):
     )
     def food_waste_stores_resource() -> Iterator[list[dict[str, Any]]]:
         """Fetch clearance data from stores across multiple zip codes."""
-        logger.debug(
-            f"Starting food_waste_stores_resource with {len(zip_codes)} zip codes"
-        )
+        logger.debug(f"Starting food_waste_stores_resource with {len(zip_codes)} zip codes")
 
         client = RESTClient(
             base_url="https://api.sallinggroup.com/v1",
@@ -179,16 +189,12 @@ def salling_food_waste_source(zip_codes: list[str]):
         )
 
         seen_store_ids = set()
-        zip_codes_per_batch = (
-            20  # Yield every 20 zip codes for better progress visibility
-        )
+        zip_codes_per_batch = 20  # Yield every 20 zip codes for better progress visibility
         current_batch = []
 
         logger.debug("About to start fetching clearance data...")
         logger.info(f"Fetching clearance data for {len(zip_codes)} zip codes...")
-        logger.info(
-            f"Estimated time: ~{len(zip_codes) * 2 / 60:.1f} minutes (2s delay per zip code)"
-        )
+        logger.info(f"Estimated time: ~{len(zip_codes) * 2 / 60:.1f} minutes (2s delay per zip code)")
 
         # Fetch all zip codes and yield in batches
         for i, zip_code in enumerate(zip_codes, start=1):
@@ -234,16 +240,13 @@ def salling_food_waste_source(zip_codes: list[str]):
                 current_batch.append(store_data)
                 stores_added += 1
 
-            logger.info(
-                f"Zip {zip_code}: Added {stores_added} new stores (total unique: {len(seen_store_ids)})"
-            )
+            logger.info(f"Zip {zip_code}: Added {stores_added} new stores (total unique: {len(seen_store_ids)})")
 
             # Yield batch every N zip codes to show progress
-            if i % zip_codes_per_batch == 0 or i == len(zip_codes):
-                if current_batch:
-                    logger.info(f"Yielding batch of {len(current_batch)} stores...")
-                    yield current_batch
-                    current_batch = []
+            if (i % zip_codes_per_batch == 0 or i == len(zip_codes)) and current_batch:
+                logger.info(f"Yielding batch of {len(current_batch)} stores...")
+                yield current_batch
+                current_batch = []
 
         logger.info(f"Fetched clearance data from {len(seen_store_ids)} unique stores")
 
@@ -266,18 +269,14 @@ if __name__ == "__main__":
     # Configure loguru logger format and level
     logger.remove()  # Remove default handler
     logger.add(
-        lambda msg: print(
-            msg, end=""
-        ),  # Use print to output (works well with dlt's progress bars)
+        lambda msg: print(msg, end=""),  # Use print to output (works well with dlt's progress bars)
         format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
         level="INFO",  # Change to DEBUG to see debug messages
         colorize=True,
     )
 
     # Suppress verbose dlt internal loggers
-    logging.getLogger("dlt.sources.helpers.rest_client.client").setLevel(
-        logging.WARNING
-    )
+    logging.getLogger("dlt.sources.helpers.rest_client.client").setLevel(logging.WARNING)
     logging.getLogger("dlt.load").setLevel(logging.WARNING)
     logging.getLogger("dlt.normalize").setLevel(logging.WARNING)
     logging.getLogger("dlt.pipeline").setLevel(logging.WARNING)
@@ -291,23 +290,41 @@ if __name__ == "__main__":
     load_info = pipeline.run(salling_stores_source())
     logger.info(f"Load info: {load_info}")
 
+    # Verify stores were loaded
+    with (
+        pipeline.sql_client() as client,
+        client.execute_query("SELECT COUNT(*) FROM salling_data.all_stores") as cursor,
+    ):
+        store_count = cursor.fetchone()[0]
+    if store_count == 0:
+        logger.error("No stores were loaded! The Salling API may be returning unexpected data.")
+        sys.exit(1)
+    logger.info(f"Verified {store_count} stores loaded into database")
+
     # Step 2: Extract unique zip codes from the all_stores table
     logger.info("=" * 60)
     logger.info("STEP 2: Extracting unique zip codes from stores")
     logger.info("=" * 60)
 
-    with pipeline.sql_client() as client:
-        with client.execute_query("""
+    with (
+        pipeline.sql_client() as client,
+        client.execute_query("""
             SELECT DISTINCT address__zip
             FROM salling_data.all_stores
             WHERE address__zip IS NOT NULL
             ORDER BY address__zip
-        """) as cursor:
-            zip_codes_result = cursor.fetchall()
+        """) as cursor,
+    ):
+        zip_codes_result = cursor.fetchall()
 
     zip_codes = [row[0] for row in zip_codes_result]
     logger.info(f"Found {len(zip_codes)} unique zip codes")
-    logger.debug(f"Zip codes sample: {zip_codes[:5]}")
+
+    # Test mode: limit zip codes for faster builds
+    test_limit = int(os.environ.get("PIPELINE_TEST_LIMIT", "0"))
+    if test_limit > 0:
+        zip_codes = zip_codes[:test_limit]
+        logger.info(f"TEST MODE: Limited to {test_limit} zip codes")
 
     # Step 3: Fetch clearance data for all zip codes
     logger.info("=" * 60)
