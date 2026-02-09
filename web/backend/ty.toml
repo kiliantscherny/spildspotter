@@ -1,0 +1,11 @@
+[environment]
+python-version = "3.13"
+python = ".venv"
+
+[terminal]
+error-on-warning = true
+
+[rules]
+division-by-zero = "error"
+possibly-unresolved-reference = "error"
+possibly-missing-import = "error"

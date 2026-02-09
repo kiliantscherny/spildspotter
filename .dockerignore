@@ -67,4 +67,3 @@ cloudbuild.yaml
 
 # GitHub workflows (not needed in image)
 .github/
-

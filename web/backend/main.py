@@ -3,7 +3,6 @@
 import base64
 import json
 import os
-import sys
 from functools import lru_cache
 from pathlib import Path
 
@@ -28,7 +27,7 @@ app = FastAPI(title="Spild Spotter API")
 
 # Configure CORS
 app.add_middleware(
-    CORSMiddleware,
+    CORSMiddleware,  # ty: ignore[invalid-argument-type]  # Starlette ParamSpec limitation
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
@@ -168,7 +167,8 @@ def get_store_details(store_id: str) -> dict | None:
     """Fetch store details from all_stores table."""
     conn = get_db_connection()
     try:
-        result = conn.execute(f"""
+        result = conn.execute(
+            f"""
             SELECT
                 id,
                 name,
@@ -179,11 +179,13 @@ def get_store_details(store_id: str) -> dict | None:
             FROM {SCHEMA_NAME}.all_stores
             WHERE id = ?
             LIMIT 1
-        """, [store_id]).fetchone()
+        """,
+            [store_id],
+        ).fetchone()
         if result is None:
             return None
         columns = ["id", "name", "brand", "street", "city", "zip"]
-        return dict(zip(columns, result))
+        return dict(zip(columns, result, strict=True))
     finally:
         conn.close()
 
@@ -196,7 +198,8 @@ def get_store_clearances(store_id: str) -> tuple[dict, ...]:
         if not table_exists(conn, "food_waste_stores") or not table_exists(conn, "food_waste_stores__clearances"):
             return ()
 
-        clearances = conn.execute(f"""
+        clearances = conn.execute(
+            f"""
             SELECT
                 c.product__description,
                 c.product__categories__en,
@@ -222,14 +225,22 @@ def get_store_clearances(store_id: str) -> tuple[dict, ...]:
             WHERE s.id = ?
             AND CAST(c.offer__stock AS DOUBLE) > 0
             ORDER BY c.offer__end_time ASC
-        """, [store_id]).fetchall()
+        """,
+            [store_id],
+        ).fetchall()
 
         columns = [
-            "product__description", "product__categories__en", "product__image",
-            "offer__new_price", "offer__original_price", "offer__percent_discount",
-            "offer__stock", "offer__stock_unit", "offer__end_time"
+            "product__description",
+            "product__categories__en",
+            "product__image",
+            "offer__new_price",
+            "offer__original_price",
+            "offer__percent_discount",
+            "offer__stock",
+            "offer__stock_unit",
+            "offer__end_time",
         ]
-        return tuple(dict(zip(columns, row)) for row in clearances)
+        return tuple(dict(zip(columns, row, strict=True)) for row in clearances)
     finally:
         conn.close()
 
@@ -389,7 +400,7 @@ async def list_brands():
     try:
         return list(get_brands())
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/stores", response_model=list[Store])
@@ -404,7 +415,7 @@ async def list_stores(brand: str | None = None):
         ]
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/stores/{store_id}", response_model=StoreDetails | None)
@@ -418,7 +429,7 @@ async def get_store(store_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/stores/{store_id}/clearances", response_model=list[ClearanceItem])
@@ -450,7 +461,7 @@ async def get_clearances(store_id: str):
             )
         return items
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/chat")
@@ -463,8 +474,13 @@ async def chat(request: ChatRequest):
 
         clearances = get_store_clearances(request.store_id)
         if not clearances:
+
             async def no_items_response():
-                yield "No clearance items found at this store. Make sure to run the data pipeline first (`just pipeline`) to load the latest clearance data."
+                yield (
+                    "No clearance items found at this store. "
+                    "Make sure to run the data pipeline first (`just pipeline`) to load the latest clearance data."
+                )
+
             return StreamingResponse(no_items_response(), media_type="text/plain")
 
         system_prompt = build_system_prompt(
@@ -522,9 +538,10 @@ async def chat(request: ChatRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
