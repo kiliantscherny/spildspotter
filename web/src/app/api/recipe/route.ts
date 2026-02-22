@@ -199,17 +199,26 @@ The recipe should be achievable for a home cook and the instructions should be c
 
     // Match shopping list items to clearance items to get images, categories, and pricing
     const shoppingListWithDetails = result.object.shoppingList.map((item) => {
+      // Skip matching for pantry staples — trust the AI's classification
+      if (item.isPantryStaple) {
+        return {
+          ...item,
+          price: null,
+          isClearanceItem: false,
+          image: null,
+          category: null,
+          originalPrice: null,
+          discount: null,
+        };
+      }
+
       // Try to find a matching clearance item by name
       const matchingClearanceItem = clearanceItems.find((ci) => {
         const itemNameLower = item.item.toLowerCase();
         const productNameLower = ci.product.toLowerCase();
-        // Check if the shopping list item contains the product name or vice versa
-        return (
-          itemNameLower.includes(productNameLower) ||
-          productNameLower.includes(itemNameLower) ||
-          // Also try matching first few words
-          itemNameLower.split(" ")[0] === productNameLower.split(" ")[0]
-        );
+        // Only match if the ingredient name contains the full product name
+        // (not the reverse — avoids "pepper" matching "pepper steak")
+        return itemNameLower.includes(productNameLower);
       });
 
       // Pass full category path for hierarchical display
